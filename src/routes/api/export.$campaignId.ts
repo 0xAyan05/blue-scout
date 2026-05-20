@@ -184,11 +184,7 @@ export const Route = createFileRoute("/api/export/$campaignId")({
 
         const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
 
-        // Persist a copy
-        await supabaseAdmin.from("campaign_exports").insert({
-          campaign_id: id,
-          file_data: buf.toString("base64"),
-        });
+        // Mark campaign as exported (we regenerate on each download)
         await supabaseAdmin
           .from("campaigns")
           .update({ status: "exported", updated_at: new Date().toISOString() })
