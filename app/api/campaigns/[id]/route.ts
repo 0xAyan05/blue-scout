@@ -8,7 +8,11 @@ export const dynamic = "force-dynamic";
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
   try {
     const campaign = await getCampaign(params.id);
-    return NextResponse.json(campaign);
+    return NextResponse.json(campaign, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+      },
+    });
   } catch (error) {
     return jsonError(error, "Could not load campaign.", "CAMPAIGN_NOT_FOUND");
   }

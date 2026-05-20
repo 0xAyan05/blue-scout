@@ -1,7 +1,16 @@
 "use client";
 
 export async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
-  const response = await fetch(input, {
+  const resolvedInput =
+    typeof input === "string"
+      ? `${input}${input.includes("?") ? "&" : "?"}__ts=${Date.now()}`
+      : input instanceof URL
+        ? new URL(
+            `${input.toString()}${input.search ? "&" : "?"}__ts=${Date.now()}`,
+          )
+        : input;
+
+  const response = await fetch(resolvedInput, {
     cache: "no-store",
     ...init,
   });
