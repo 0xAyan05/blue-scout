@@ -148,20 +148,20 @@ function resolveWeights(config: Config, clientNiche: string): Weights {
 
 function checkDisqualified(vendor: Vendor, campaign: Campaign, config: Config): string | null {
   if (vendor.dr == null || vendor.dr < campaign.min_dr) {
-    return `DR ${vendor.dr ?? 0} — below minimum ${campaign.min_dr}`;
+    return `DR ${vendor.dr ?? 0} - below minimum ${campaign.min_dr}`;
   }
   if (vendor.traffic == null || vendor.traffic < campaign.min_traffic) {
-    return `Traffic ${vendor.traffic ?? 0} — below minimum ${campaign.min_traffic}`;
+    return `Traffic ${vendor.traffic ?? 0} - below minimum ${campaign.min_traffic}`;
   }
   if (
     campaign.link_preference === "dofollow" &&
     (vendor.link_type ?? "").toLowerCase() === "nofollow"
   ) {
-    return "Nofollow link — campaign requires dofollow";
+    return "Nofollow link - campaign requires dofollow";
   }
   const excluded = config.disqualifiers?.ranking_excluded ?? [];
   if (vendor.ranking && excluded.includes(vendor.ranking)) {
-    return `Ranking: ${vendor.ranking} — excluded by config`;
+    return `Ranking: ${vendor.ranking} - excluded by config`;
   }
   return null;
 }
@@ -1046,3 +1046,4 @@ export async function buildCampaignExport(campaignId: string) {
   const filename = `${safeClientName}_campaign_${today}.xlsx`;
   return { buffer: fileBuffer, filename };
 }
+

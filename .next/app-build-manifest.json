@@ -1,9 +1,9 @@
 {
   "pages": {
-    "/(dashboard)/campaigns/page": [
+    "/(dashboard)/config/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/campaigns/page.js"
+      "static/chunks/app/(dashboard)/config/page.js"
     ],
     "/(dashboard)/layout": [
       "static/chunks/webpack.js",
@@ -16,6 +16,16 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
+    "/(dashboard)/campaigns/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/campaigns/page.js"
+    ],
+    "/(dashboard)/campaigns/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(dashboard)/campaigns/[id]/page.js"
+    ],
     "/(dashboard)/campaigns/new/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -25,11 +35,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(dashboard)/inventory/page.js"
-    ],
-    "/(dashboard)/config/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/config/page.js"
     ]
   }
 }

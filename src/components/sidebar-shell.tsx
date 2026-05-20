@@ -35,9 +35,11 @@ export function SidebarShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
+
         <div className="mt-5 px-4 text-[11px] uppercase tracking-[0.22em] text-sidebar-foreground/45">
           Workspace
         </div>
+
         <nav className="mt-2 flex-1 space-y-1 px-3 py-2">
           {nav.map((item) => {
             const Icon = item.icon;
@@ -61,7 +63,9 @@ export function SidebarShell({ children }: { children: React.ReactNode }) {
                 <span
                   className={cn(
                     "flex h-8 w-8 items-center justify-center rounded-lg transition",
-                    isActive ? "bg-white/12 text-white" : "bg-white/5 text-sidebar-foreground/70 group-hover:bg-white/10 group-hover:text-white",
+                    isActive
+                      ? "bg-white/12 text-white"
+                      : "bg-white/5 text-sidebar-foreground/70 group-hover:bg-white/10 group-hover:text-white",
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -71,20 +75,20 @@ export function SidebarShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+
         <div className="px-4 pb-4">
           <div className="rounded-2xl border border-white/8 bg-white/5 p-3 text-xs text-sidebar-foreground/60">
             <div className="text-[11px] uppercase tracking-[0.2em] text-sidebar-foreground/40">
               Submitted By
             </div>
-            <div className="mt-2 text-sm font-semibold text-white">
-              Adrian Repomanta
-            </div>
+            <div className="mt-2 text-sm font-semibold text-white">Adrian Repomanta</div>
             <div className="mt-1 leading-relaxed text-sidebar-foreground/55">
-              Application — Junior AI Tools Developer
+              Application - Junior AI Tools Developer
             </div>
           </div>
         </div>
       </aside>
+
       <main className="ml-[236px] min-h-screen flex-1">
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.35),rgba(248,250,252,0.8))]">
           {children}

@@ -32,6 +32,7 @@ type CampaignData = {
 };
 
 type CampaignStatus = { status: string; scored: number; total: number };
+
 type CampaignResult = {
   id: string;
   domain: string;
@@ -85,6 +86,28 @@ function scoreBarWidth(value: number, max: number) {
   return `${Math.min(100, Math.round((value / max) * 100))}%`;
 }
 
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, { className: string; label: string }> = {
+    scoring: { className: "bg-amber-100 text-amber-800", label: "Scoring..." },
+    in_progress: { className: "bg-blue-100 text-blue-800", label: "In Progress" },
+    exported: { className: "bg-green-100 text-green-800", label: "Exported" },
+    error: { className: "bg-rose-100 text-rose-800", label: "Error" },
+  };
+
+  const resolved = map[status] ?? {
+    className: "bg-slate-100 text-slate-700",
+    label: status,
+  };
+
+  return (
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium ${resolved.className}`}
+    >
+      {resolved.label}
+    </span>
+  );
+}
+
 export default function CampaignDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
@@ -112,8 +135,10 @@ export default function CampaignDetailPage() {
   });
 
   const [scoringInFlight, setScoringInFlight] = useState(false);
+
   useEffect(() => {
     if (!id || !isScoring || scoringInFlight) return;
+
     setScoringInFlight(true);
     fetch(`/api/campaigns/${id}/score`, { method: "POST" })
       .then(async (response) => {
@@ -179,6 +204,21 @@ export default function CampaignDetailPage() {
     onError: (error) => toast.error(error instanceof Error ? error.message : "Restart failed"),
   });
 
+  const resumeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/campaigns/${id}/score`, { method: "POST" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error ?? "Failed to resume scoring");
+      return data;
+    },
+    onSuccess: async () => {
+      await refetchStatus();
+      await queryClient.invalidateQueries({ queryKey: ["campaign-results", id] });
+      await queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Resume failed"),
+  });
+
   const exportMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(`/api/campaigns/${id}/export`, { method: "POST" });
@@ -226,35 +266,34 @@ export default function CampaignDetailPage() {
   const disqualified = (results ?? []).filter((row) => row.disqualified);
 
   const geoOptions = useMemo(
-    () =>
-      [
-        "All",
-        ...Array.from(
-          new Set(scored.map((row) => row.geo).filter((value): value is string => Boolean(value))),
-        ).sort(),
-      ],
+    () => [
+      "All",
+      ...Array.from(
+        new Set(scored.map((row) => row.geo).filter((value): value is string => Boolean(value))),
+      ).sort(),
+    ],
     [scored],
   );
+
   const linkTypeOptions = useMemo(
-    () =>
-      [
-        "All",
-        ...Array.from(
-          new Set(
-            scored.map((row) => row.link_type).filter((value): value is string => Boolean(value)),
-          ),
-        ).sort(),
-      ],
+    () => [
+      "All",
+      ...Array.from(
+        new Set(
+          scored.map((row) => row.link_type).filter((value): value is string => Boolean(value)),
+        ),
+      ).sort(),
+    ],
     [scored],
   );
+
   const rankingOptions = useMemo(
-    () =>
-      [
-        "All",
-        ...Array.from(
-          new Set(scored.map((row) => row.ranking).filter((value): value is string => Boolean(value))),
-        ).sort(),
-      ],
+    () => [
+      "All",
+      ...Array.from(
+        new Set(scored.map((row) => row.ranking).filter((value): value is string => Boolean(value))),
+      ).sort(),
+    ],
     [scored],
   );
 
@@ -262,8 +301,14 @@ export default function CampaignDetailPage() {
     const minimumScore = minScore.trim() === "" ? null : Number(minScore);
     return scored
       .filter((row) => (row.rank_position ?? Number.POSITIVE_INFINITY) <= shortlistSize)
-      .filter((row) => (search.trim() ? row.domain.toLowerCase().includes(search.toLowerCase()) : true))
-      .filter((row) => (minimumScore != null && !Number.isNaN(minimumScore) ? Number(row.score ?? 0) >= minimumScore : true))
+      .filter((row) =>
+        search.trim() ? row.domain.toLowerCase().includes(search.toLowerCase()) : true,
+      )
+      .filter((row) =>
+        minimumScore != null && !Number.isNaN(minimumScore)
+          ? Number(row.score ?? 0) >= minimumScore
+          : true,
+      )
       .filter((row) => (geoFilter !== "All" ? row.geo === geoFilter : true))
       .filter((row) => (linkTypeFilter !== "All" ? row.link_type === linkTypeFilter : true))
       .filter((row) => (rankingFilter !== "All" ? row.ranking === rankingFilter : true));
@@ -285,6 +330,7 @@ export default function CampaignDetailPage() {
 
   const configMeta = campaign.scoring_config_meta;
   const inventoryStatus = campaign.inventory_status;
+  const resolvedStatus = status?.status ?? campaign.status;
 
   return (
     <TooltipProvider>
@@ -292,21 +338,30 @@ export default function CampaignDetailPage() {
         <div className="sticky top-0 z-10 border-b border-white/60 bg-background/90 backdrop-blur-xl">
           <div className="flex items-center justify-between gap-4 px-6 py-4">
             <div className="flex min-w-0 items-center gap-3">
-              <Link href="/campaigns" className="flex items-center text-sm text-muted-foreground hover:text-foreground">
+              <Link
+                href="/campaigns"
+                className="flex items-center text-sm text-muted-foreground hover:text-foreground"
+              >
                 <ChevronLeft className="h-4 w-4" />
                 Campaigns
               </Link>
               <div className="min-w-0 text-sm">
-                <div className="truncate font-semibold">{campaign.client_name}</div>
+                <div className="flex items-center gap-2">
+                  <div className="truncate font-semibold">{campaign.client_name}</div>
+                  <StatusBadge status={resolvedStatus} />
+                </div>
                 <div className="truncate text-muted-foreground">{campaign.client_niche}</div>
               </div>
             </div>
+
             <div className="flex items-center gap-2 text-xs">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="inline-flex items-center gap-1 rounded-full border border-slate-200/80 bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur">
                     <Info className="h-3.5 w-3.5" />
-                    {configMeta ? `Config v${configMeta.version} — ${configMeta.label ?? "Untitled"}` : "Config —"}
+                    {configMeta
+                      ? `Config v${configMeta.version} - ${configMeta.label ?? "Untitled"}`
+                      : "Config -"}
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -315,9 +370,15 @@ export default function CampaignDetailPage() {
                   </pre>
                 </TooltipContent>
               </Tooltip>
-              <div className="inline-flex rounded-full border border-slate-200/80 bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur" title={formatDateLong(inventoryStatus?.uploaded_at)}>
-                Inventory: {inventoryStatus?.count ?? 0} domains, uploaded {formatDate(inventoryStatus?.uploaded_at)}
+
+              <div
+                className="inline-flex rounded-full border border-slate-200/80 bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur"
+                title={formatDateLong(inventoryStatus?.uploaded_at)}
+              >
+                Inventory: {inventoryStatus?.count ?? 0} domains, uploaded{" "}
+                {formatDate(inventoryStatus?.uploaded_at)}
               </div>
+
               <Button
                 onClick={() => exportMutation.mutate()}
                 disabled={isScoring || exportMutation.isPending}
@@ -331,21 +392,25 @@ export default function CampaignDetailPage() {
 
           <div className="grid grid-cols-4 gap-4 bg-[linear-gradient(135deg,rgba(15,23,42,1),rgba(30,41,59,0.98))] px-6 py-4 text-sm text-sidebar-foreground">
             <div className="rounded-xl border border-white/8 bg-white/5 px-4 py-3">
-              <span className="text-sidebar-foreground/60">Links Selected:</span> <strong className="ml-1">{linksSelected}</strong>
+              <span className="text-sidebar-foreground/60">Links Selected:</span>
+              <strong className="ml-1">{linksSelected}</strong>
             </div>
             <div className="rounded-xl border border-white/8 bg-white/5 px-4 py-3">
-              <span className="text-sidebar-foreground/60">Total Spent:</span> <strong className="ml-1">${totalSpent.toFixed(0)}</strong>
+              <span className="text-sidebar-foreground/60">Total Spent:</span>
+              <strong className="ml-1">${totalSpent.toFixed(0)}</strong>
             </div>
             <div className="rounded-xl border border-white/8 bg-white/5 px-4 py-3">
-              <span className="text-sidebar-foreground/60">Budget Remaining:</span> <strong className="ml-1">${budgetRemaining.toFixed(0)}</strong>
+              <span className="text-sidebar-foreground/60">Budget Remaining:</span>
+              <strong className="ml-1">${budgetRemaining.toFixed(0)}</strong>
             </div>
             <div className="rounded-xl border border-white/8 bg-white/5 px-4 py-3">
-              <span className="text-sidebar-foreground/60">Avg DR:</span> <strong className="ml-1">{avgDr.toFixed(1)}</strong>
+              <span className="text-sidebar-foreground/60">Avg DR:</span>
+              <strong className="ml-1">{avgDr.toFixed(1)}</strong>
             </div>
           </div>
         </div>
 
-        {status?.status === "error" && (
+        {resolvedStatus === "error" && (
           <div className="m-6 rounded-md border border-rose-300 bg-rose-50 px-4 py-3 text-sm text-rose-900">
             Scoring failed. Check the server logs.
           </div>
@@ -353,13 +418,15 @@ export default function CampaignDetailPage() {
 
         {interrupted && (
           <div className="m-6 flex items-center justify-between rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            <span className="flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Scoring was interrupted.</span>
+            <span className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" /> Scoring was interrupted.
+            </span>
             <div className="flex gap-2">
-              <Button size="sm" onClick={() => { setScoringInFlight(false); void refetchStatus(); }}>
+              <Button size="sm" disabled={resumeMutation.isPending} onClick={() => resumeMutation.mutate()}>
                 Resume Scoring
               </Button>
               <Button size="sm" variant="outline" onClick={() => restartMutation.mutate()}>
-                Discard & Start Over
+                Discard and Start Over
               </Button>
             </div>
           </div>
@@ -368,12 +435,18 @@ export default function CampaignDetailPage() {
         {isScoring && !interrupted && (
           <div className="surface-card m-6 p-4">
             <div className="mb-2 flex items-center justify-between text-sm">
-              <span>⏳ Scoring in progress — {status?.scored ?? 0} of {status?.total ?? 0} domains processed…</span>
+              <span>
+                Scoring in progress - {status?.scored ?? 0} of {status?.total ?? 0} domains processed...
+              </span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full bg-primary transition-all"
-                style={{ width: `${status && status.total > 0 ? Math.round((status.scored / status.total) * 100) : 0}%` }}
+                style={{
+                  width: `${
+                    status && status.total > 0 ? Math.round((status.scored / status.total) * 100) : 0
+                  }%`,
+                }}
               />
             </div>
           </div>
@@ -382,10 +455,22 @@ export default function CampaignDetailPage() {
         {!isScoring && results && (
           <div className="p-6">
             <div className="mb-4 flex items-center gap-2 border-b">
-              <button onClick={() => setTab("shortlist")} className={`px-3 py-2 text-sm ${tab === "shortlist" ? "border-b-2 border-primary font-medium" : "text-muted-foreground"}`}>
+              <button
+                onClick={() => setTab("shortlist")}
+                className={`px-3 py-2 text-sm ${
+                  tab === "shortlist" ? "border-b-2 border-primary font-medium" : "text-muted-foreground"
+                }`}
+              >
                 Shortlist
               </button>
-              <button onClick={() => setTab("disqualified")} className={`px-3 py-2 text-sm ${tab === "disqualified" ? "border-b-2 border-primary font-medium" : "text-muted-foreground"}`}>
+              <button
+                onClick={() => setTab("disqualified")}
+                className={`px-3 py-2 text-sm ${
+                  tab === "disqualified"
+                    ? "border-b-2 border-primary font-medium"
+                    : "text-muted-foreground"
+                }`}
+              >
                 Disqualified ({disqualified.length})
               </button>
             </div>
@@ -395,27 +480,65 @@ export default function CampaignDetailPage() {
                 <div className="mb-4 grid grid-cols-[minmax(220px,1fr)_120px_120px_120px_120px_auto] items-center gap-2">
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input placeholder="Search domains..." value={search} onChange={(event) => setSearch(event.target.value)} className="pl-9" />
+                    <Input
+                      placeholder="Search domains..."
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      className="pl-9"
+                    />
                   </div>
-                  <Input placeholder="Min Score" value={minScore} onChange={(event) => setMinScore(event.target.value)} type="number" min={0} max={100} />
-                  <select className="h-10 rounded-md border bg-background px-3 text-sm" value={geoFilter} onChange={(event) => setGeoFilter(event.target.value)}>
+                  <Input
+                    placeholder="Min Score"
+                    value={minScore}
+                    onChange={(event) => setMinScore(event.target.value)}
+                    type="number"
+                    min={0}
+                    max={100}
+                  />
+                  <select
+                    className="h-10 rounded-md border bg-background px-3 text-sm"
+                    value={geoFilter}
+                    onChange={(event) => setGeoFilter(event.target.value)}
+                  >
                     {geoOptions.map((option) => (
-                      <option key={option} value={option}>Geo: {option}</option>
+                      <option key={option} value={option}>
+                        Geo: {option}
+                      </option>
                     ))}
                   </select>
-                  <select className="h-10 rounded-md border bg-background px-3 text-sm" value={linkTypeFilter} onChange={(event) => setLinkTypeFilter(event.target.value)}>
+                  <select
+                    className="h-10 rounded-md border bg-background px-3 text-sm"
+                    value={linkTypeFilter}
+                    onChange={(event) => setLinkTypeFilter(event.target.value)}
+                  >
                     {linkTypeOptions.map((option) => (
-                      <option key={option} value={option}>Link: {option}</option>
+                      <option key={option} value={option}>
+                        Link Type: {option}
+                      </option>
                     ))}
                   </select>
-                  <select className="h-10 rounded-md border bg-background px-3 text-sm" value={rankingFilter} onChange={(event) => setRankingFilter(event.target.value)}>
+                  <select
+                    className="h-10 rounded-md border bg-background px-3 text-sm"
+                    value={rankingFilter}
+                    onChange={(event) => setRankingFilter(event.target.value)}
+                  >
                     {rankingOptions.map((option) => (
-                      <option key={option} value={option}>Ranking: {option}</option>
+                      <option key={option} value={option}>
+                        Ranking: {option}
+                      </option>
                     ))}
                   </select>
                   <div className="ml-auto inline-flex overflow-hidden rounded-md border">
                     {[25, 50, 100].map((size) => (
-                      <button key={size} onClick={() => setShortlistSize(size as 25 | 50 | 100)} className={`px-3 py-1.5 text-xs ${shortlistSize === size ? "bg-primary text-primary-foreground" : "bg-background hover:bg-accent"}`}>
+                      <button
+                        key={size}
+                        onClick={() => setShortlistSize(size as 25 | 50 | 100)}
+                        className={`px-3 py-1.5 text-xs ${
+                          shortlistSize === size
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-background hover:bg-accent"
+                        }`}
+                      >
                         {size}
                       </button>
                     ))}
@@ -452,43 +575,98 @@ export default function CampaignDetailPage() {
                         const isExpanded = !!expanded[row.id];
                         const breakdown = row.score_breakdown ?? {};
                         const weights = configMeta?.weights ?? {};
+
                         return (
                           <Fragment key={row.id}>
                             <tr className={row.included ? "" : "bg-rose-50"}>
                               <td className="px-3 py-2 text-muted-foreground">{row.rank_position}</td>
                               <td className="px-3 py-2 font-semibold">
-                                <a href={`https://${row.domain}`} target="_blank" rel="noreferrer" className={`hover:underline ${row.included ? "" : "line-through"}`}>
+                                <a
+                                  href={`https://${row.domain}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className={`hover:underline ${row.included ? "" : "line-through"}`}
+                                >
                                   {row.domain}
                                 </a>
                               </td>
                               <td className="px-3 py-2">
                                 <div>{Number(row.score ?? 0).toFixed(0)}/100</div>
                                 <div className="mt-1 h-1.5 w-16 rounded bg-muted">
-                                  <div className="h-full rounded bg-primary" style={{ width: `${Number(row.score ?? 0)}%` }} />
+                                  <div
+                                    className="h-full rounded bg-primary"
+                                    style={{ width: `${Number(row.score ?? 0)}%` }}
+                                  />
                                 </div>
                               </td>
                               <td className="px-3 py-2">
-                                <button onClick={() => setExpanded((current) => ({ ...current, [row.id]: !current[row.id] }))} className="text-xs text-primary hover:underline">
-                                  {isExpanded ? "▼" : "▶"} Details
+                                <button
+                                  onClick={() =>
+                                    setExpanded((current) => ({ ...current, [row.id]: !current[row.id] }))
+                                  }
+                                  className="text-xs text-primary hover:underline"
+                                >
+                                  {isExpanded ? "v" : ">"} Details
                                 </button>
                               </td>
-                              <td className="max-w-[280px] truncate px-3 py-2 text-muted-foreground" title={row.reasoning ?? ""}>{row.reasoning}</td>
+                              <td className="max-w-[280px] truncate px-3 py-2 text-muted-foreground">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="cursor-default">{row.reasoning}</span>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-xs text-xs">
+                                    {row.reasoning ?? "No reasoning available."}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </td>
                               <td className="px-3 py-2">{row.dr}</td>
                               <td className="px-3 py-2">{formatTraffic(row.traffic)}</td>
                               <td className="px-3 py-2">{row.geo}</td>
                               <td className="px-3 py-2">${row.price}</td>
                               <td className="px-3 py-2">{row.tat ? `${row.tat}d` : "-"}</td>
                               <td className="px-3 py-2">
-                                <span className={`inline-flex rounded px-2 py-0.5 text-xs ${(row.link_type ?? "").toLowerCase() === "dofollow" ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-700"}`}>
+                                <span
+                                  className={`inline-flex rounded px-2 py-0.5 text-xs ${
+                                    (row.link_type ?? "").toLowerCase() === "dofollow"
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-slate-100 text-slate-700"
+                                  }`}
+                                >
                                   {row.link_type}
                                 </span>
                               </td>
-                              <td className="max-w-[160px] truncate px-3 py-2 text-xs text-muted-foreground" title={row.contact_email ?? ""}>{row.contact_email}</td>
-                              <td className="px-3 py-2">{row.red_flags ? <span title={row.red_flags}>⚠</span> : null}</td>
+                              <td className="max-w-[160px] truncate px-3 py-2 text-xs text-muted-foreground">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="cursor-default">{row.contact_email}</span>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="text-xs">
+                                    {row.contact_email ?? "No contact email"}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </td>
                               <td className="px-3 py-2">
-                                <Switch checked={!!row.included} onCheckedChange={(value) => toggleMutation.mutate({ resultId: row.id, included: value })} />
+                                {row.red_flags ? (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="cursor-help font-semibold text-amber-700">!</span>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-xs text-xs">
+                                      {row.red_flags}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                ) : null}
+                              </td>
+                              <td className="px-3 py-2">
+                                <Switch
+                                  checked={!!row.included}
+                                  onCheckedChange={(value) =>
+                                    toggleMutation.mutate({ resultId: row.id, included: value })
+                                  }
+                                />
                               </td>
                             </tr>
+
                             {isExpanded && (
                               <tr className="bg-muted/30">
                                 <td colSpan={14} className="px-4 py-4">
@@ -502,15 +680,30 @@ export default function CampaignDetailPage() {
                                       ["geo_match", "Geo Match"],
                                       ["no_red_flags", "No Red Flags"],
                                     ].map(([key, label]) => (
-                                      <div key={key} className="grid grid-cols-[140px_1fr_56px] items-center gap-3">
+                                      <div
+                                        key={key}
+                                        className="grid grid-cols-[140px_1fr_56px] items-center gap-3"
+                                      >
                                         <span className="text-muted-foreground">{label}</span>
                                         <div className="h-2 overflow-hidden rounded bg-muted">
-                                          <div className="h-full rounded bg-primary" style={{ width: scoreBarWidth(Number(breakdown[key] ?? 0), Number(weights[key] ?? 0)) }} />
+                                          <div
+                                            className="h-full rounded bg-primary"
+                                            style={{
+                                              width: scoreBarWidth(
+                                                Number(breakdown[key] ?? 0),
+                                                Number(weights[key] ?? 0),
+                                              ),
+                                            }}
+                                          />
                                         </div>
-                                        <span className="font-mono">{Number(breakdown[key] ?? 0)}/{Number(weights[key] ?? 0)}</span>
+                                        <span className="font-mono">
+                                          {Number(breakdown[key] ?? 0)}/{Number(weights[key] ?? 0)}
+                                        </span>
                                       </div>
                                     ))}
-                                    <div className="border-t pt-2 text-right font-semibold">Total {Number(row.score ?? 0).toFixed(0)}/100</div>
+                                    <div className="border-t pt-2 text-right font-semibold">
+                                      Total {Number(row.score ?? 0).toFixed(0)}/100
+                                    </div>
                                   </div>
                                 </td>
                               </tr>
@@ -541,17 +734,19 @@ export default function CampaignDetailPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {[...disqualified].sort((a, b) => a.domain.localeCompare(b.domain)).map((row) => (
-                        <tr key={row.id}>
-                          <td className="px-3 py-2">{row.domain}</td>
-                          <td className="px-3 py-2">{row.dr}</td>
-                          <td className="px-3 py-2">{formatTraffic(row.traffic)}</td>
-                          <td className="px-3 py-2">{row.link_type}</td>
-                          <td className="px-3 py-2">{row.ranking}</td>
-                          <td className="px-3 py-2">{row.red_flags}</td>
-                          <td className="px-3 py-2 text-muted-foreground">{row.disqualify_reason}</td>
-                        </tr>
-                      ))}
+                      {[...disqualified]
+                        .sort((a, b) => a.domain.localeCompare(b.domain))
+                        .map((row) => (
+                          <tr key={row.id}>
+                            <td className="px-3 py-2">{row.domain}</td>
+                            <td className="px-3 py-2">{row.dr}</td>
+                            <td className="px-3 py-2">{formatTraffic(row.traffic)}</td>
+                            <td className="px-3 py-2">{row.link_type}</td>
+                            <td className="px-3 py-2">{row.ranking}</td>
+                            <td className="px-3 py-2">{row.red_flags}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{row.disqualify_reason}</td>
+                          </tr>
+                        ))}
                     </tbody>
                   </table>
                 </div>

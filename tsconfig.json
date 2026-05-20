@@ -35,5 +35,5 @@
     "src/integrations/supabase/types.ts",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "src/routes", "src/start.ts", "src/server.ts", "src/router.tsx", "src/routeTree.gen.ts"]
+  "exclude": ["node_modules"]
 }

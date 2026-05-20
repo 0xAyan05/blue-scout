@@ -1,14 +1,31 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-const GEOS = ["Global", "US", "GB", "AU", "CA", "IE", "NZ", "DE", "FR", "ES", "IT", "NL", "SE", "DK", "NO", "FI"];
+const GEOS = [
+  "Global",
+  "US",
+  "GB",
+  "AU",
+  "CA",
+  "IE",
+  "NZ",
+  "DE",
+  "FR",
+  "ES",
+  "IT",
+  "NL",
+  "SE",
+  "DK",
+  "NO",
+  "FI",
+];
 
 export default function NewCampaignPage() {
   const router = useRouter();
@@ -24,11 +41,21 @@ export default function NewCampaignPage() {
   const [shortlist, setShortlist] = useState<25 | 50 | 100>(50);
   const [submitting, setSubmitting] = useState(false);
 
+  const pageErrors = useMemo(
+    () =>
+      pages.map((page) => ({
+        url: page.url.trim() === "",
+        keyword: page.keyword.trim() === "",
+      })),
+    [pages],
+  );
+
   const toggleGeo = (geo: string) => {
     if (geo === "Global") {
       setGeos(["Global"]);
       return;
     }
+
     setGeos((current) => {
       const withoutGlobal = current.filter((item) => item !== "Global");
       return withoutGlobal.includes(geo)
@@ -48,6 +75,7 @@ export default function NewCampaignPage() {
   const submit = async () => {
     if (!valid) return;
     setSubmitting(true);
+
     try {
       const response = await fetch("/api/campaigns/create", {
         method: "POST",
@@ -90,9 +118,14 @@ export default function NewCampaignPage() {
       <Section title="Client Details">
         <Field label="Client Name">
           <Input value={clientName} onChange={(event) => setClientName(event.target.value)} />
+          {!clientName.trim() && <InlineError>Client name is required.</InlineError>}
         </Field>
-        <Field label="Client Niche" hint="Comma-separated — e.g. SaaS, project management, productivity">
+        <Field
+          label="Client Niche"
+          hint="Comma-separated - e.g. SaaS, project management, productivity"
+        >
           <Input value={clientNiche} onChange={(event) => setClientNiche(event.target.value)} />
+          {!clientNiche.trim() && <InlineError>Client niche is required.</InlineError>}
         </Field>
       </Section>
 
@@ -123,13 +156,28 @@ export default function NewCampaignPage() {
                 }
               />
               {pages.length > 1 && (
-                <Button variant="ghost" size="icon" onClick={() => setPages((current) => current.filter((_, i) => i !== index))}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    setPages((current) => current.filter((_, itemIndex) => itemIndex !== index))
+                  }
+                >
                   <X className="h-4 w-4" />
                 </Button>
               )}
             </div>
           ))}
-          <Button variant="outline" size="sm" onClick={() => setPages((current) => [...current, { url: "", keyword: "" }])}>
+
+          {pages.some((_, index) => pageErrors[index]?.url || pageErrors[index]?.keyword) && (
+            <InlineError>Each target page needs both a URL and a primary keyword.</InlineError>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPages((current) => [...current, { url: "", keyword: "" }])}
+          >
             <Plus className="mr-1 h-4 w-4" /> Add page
           </Button>
         </div>
@@ -138,16 +186,37 @@ export default function NewCampaignPage() {
       <Section title="Campaign Parameters">
         <div className="grid grid-cols-2 gap-4">
           <Field label="Budget Per Link (USD)">
-            <Input type="number" min={1} value={budget} onChange={(event) => setBudget(Number(event.target.value))} />
+            <Input
+              type="number"
+              min={1}
+              value={budget}
+              onChange={(event) => setBudget(Number(event.target.value))}
+            />
           </Field>
           <Field label="Link Count Goal">
-            <Input type="number" min={1} value={goal} onChange={(event) => setGoal(Number(event.target.value))} />
+            <Input
+              type="number"
+              min={1}
+              value={goal}
+              onChange={(event) => setGoal(Number(event.target.value))}
+            />
           </Field>
           <Field label="Minimum DR">
-            <Input type="number" min={0} max={100} value={minDr} onChange={(event) => setMinDr(Number(event.target.value))} />
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={minDr}
+              onChange={(event) => setMinDr(Number(event.target.value))}
+            />
           </Field>
           <Field label="Minimum Traffic">
-            <Input type="number" min={0} value={minTraffic} onChange={(event) => setMinTraffic(Number(event.target.value))} />
+            <Input
+              type="number"
+              min={0}
+              value={minTraffic}
+              onChange={(event) => setMinTraffic(Number(event.target.value))}
+            />
           </Field>
         </div>
       </Section>
@@ -162,7 +231,9 @@ export default function NewCampaignPage() {
                 onClick={() => toggleGeo(geo)}
                 disabled={geo !== "Global" && geos.includes("Global")}
                 className={`rounded-full border px-3 py-1 text-xs transition ${
-                  geos.includes(geo) ? "border-primary bg-primary text-primary-foreground" : "border-input bg-background hover:bg-accent"
+                  geos.includes(geo)
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-input bg-background hover:bg-accent"
                 } disabled:opacity-40`}
               >
                 {geo}
@@ -170,11 +241,16 @@ export default function NewCampaignPage() {
             ))}
           </div>
         </Field>
+
         <Field label="Follow Link">
           <div className="flex gap-4">
             {(["dofollow", "either"] as const).map((value) => (
               <label key={value} className="flex items-center gap-2 text-sm">
-                <input type="radio" checked={linkPref === value} onChange={() => setLinkPref(value)} />
+                <input
+                  type="radio"
+                  checked={linkPref === value}
+                  onChange={() => setLinkPref(value)}
+                />
                 {value === "dofollow" ? "Dofollow only" : "Either"}
               </label>
             ))}
@@ -189,7 +265,11 @@ export default function NewCampaignPage() {
               key={size}
               type="button"
               onClick={() => setShortlist(size as 25 | 50 | 100)}
-              className={`px-4 py-2 text-sm ${shortlist === size ? "bg-primary text-primary-foreground" : "bg-background hover:bg-accent"}`}
+              className={`px-4 py-2 text-sm ${
+                shortlist === size
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background hover:bg-accent"
+              }`}
             >
               Top {size}
             </button>
@@ -198,9 +278,11 @@ export default function NewCampaignPage() {
       </Section>
 
       <div className="mt-8 flex justify-end gap-2">
-        <Button variant="outline" onClick={() => router.push("/campaigns")}>Cancel</Button>
+        <Button variant="outline" onClick={() => router.push("/campaigns")}>
+          Cancel
+        </Button>
         <Button onClick={submit} disabled={!valid || submitting}>
-          {submitting ? "Starting..." : "Start Scoring →"}
+          {submitting ? "Starting..." : "Start Scoring ->"}
         </Button>
       </div>
     </div>
@@ -210,13 +292,23 @@ export default function NewCampaignPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="surface-card mt-6 p-5">
-      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
+      <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </h2>
       <div className="space-y-4">{children}</div>
     </section>
   );
 }
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
@@ -224,4 +316,8 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
       {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
+}
+
+function InlineError({ children }: { children: React.ReactNode }) {
+  return <p className="text-xs text-rose-700">{children}</p>;
 }

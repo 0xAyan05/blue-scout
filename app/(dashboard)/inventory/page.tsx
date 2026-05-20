@@ -99,7 +99,7 @@ export default function InventoryPage() {
         ) : data && data.count > 0 ? (
           <>
             <p className="text-sm">
-              <span className="text-green-700">OK</span> <strong>{statusText}</strong>
+              <span className="text-green-700">Loaded</span> <strong>{statusText}</strong>
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               Last uploaded: {data.lastUploadedAt ? new Date(data.lastUploadedAt).toLocaleString() : "-"}
@@ -155,3 +155,4 @@ export default function InventoryPage() {
     </div>
   );
 }
+

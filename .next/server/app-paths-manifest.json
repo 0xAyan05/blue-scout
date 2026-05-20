@@ -1,9 +1,9 @@
 {
-  "/api/campaigns/route": "app/api/campaigns/route.js",
   "/api/inventory/status/route": "app/api/inventory/status/route.js",
-  "/api/config/route": "app/api/config/route.js",
+  "/api/campaigns/route": "app/api/campaigns/route.js",
   "/(dashboard)/campaigns/page": "app/(dashboard)/campaigns/page.js",
+  "/(dashboard)/config/page": "app/(dashboard)/config/page.js",
+  "/(dashboard)/campaigns/[id]/page": "app/(dashboard)/campaigns/[id]/page.js",
   "/(dashboard)/campaigns/new/page": "app/(dashboard)/campaigns/new/page.js",
-  "/(dashboard)/inventory/page": "app/(dashboard)/inventory/page.js",
-  "/(dashboard)/config/page": "app/(dashboard)/config/page.js"
+  "/(dashboard)/inventory/page": "app/(dashboard)/inventory/page.js"
 }
