@@ -9,54 +9,177 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthedInventoryRouteImport } from './routes/_authed/inventory'
+import { Route as AuthedConfigRouteImport } from './routes/_authed/config'
+import { Route as AuthedCampaignsRouteImport } from './routes/_authed/campaigns'
 import { Route as ApiExportCampaignIdRouteImport } from './routes/api/export.$campaignId'
+import { Route as AuthedCampaignsNewRouteImport } from './routes/_authed/campaigns.new'
+import { Route as AuthedCampaignsIdRouteImport } from './routes/_authed/campaigns.$id'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedRoute = AuthedRouteImport.update({
+  id: '/_authed',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedInventoryRoute = AuthedInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedConfigRoute = AuthedConfigRouteImport.update({
+  id: '/config',
+  path: '/config',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedCampaignsRoute = AuthedCampaignsRouteImport.update({
+  id: '/campaigns',
+  path: '/campaigns',
+  getParentRoute: () => AuthedRoute,
 } as any)
 const ApiExportCampaignIdRoute = ApiExportCampaignIdRouteImport.update({
   id: '/api/export/$campaignId',
   path: '/api/export/$campaignId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedCampaignsNewRoute = AuthedCampaignsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AuthedCampaignsRoute,
+} as any)
+const AuthedCampaignsIdRoute = AuthedCampaignsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthedCampaignsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/campaigns': typeof AuthedCampaignsRouteWithChildren
+  '/config': typeof AuthedConfigRoute
+  '/inventory': typeof AuthedInventoryRoute
+  '/campaigns/$id': typeof AuthedCampaignsIdRoute
+  '/campaigns/new': typeof AuthedCampaignsNewRoute
   '/api/export/$campaignId': typeof ApiExportCampaignIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
+  '/campaigns': typeof AuthedCampaignsRouteWithChildren
+  '/config': typeof AuthedConfigRoute
+  '/inventory': typeof AuthedInventoryRoute
+  '/campaigns/$id': typeof AuthedCampaignsIdRoute
+  '/campaigns/new': typeof AuthedCampaignsNewRoute
   '/api/export/$campaignId': typeof ApiExportCampaignIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authed': typeof AuthedRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_authed/campaigns': typeof AuthedCampaignsRouteWithChildren
+  '/_authed/config': typeof AuthedConfigRoute
+  '/_authed/inventory': typeof AuthedInventoryRoute
+  '/_authed/campaigns/$id': typeof AuthedCampaignsIdRoute
+  '/_authed/campaigns/new': typeof AuthedCampaignsNewRoute
   '/api/export/$campaignId': typeof ApiExportCampaignIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/export/$campaignId'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/campaigns'
+    | '/config'
+    | '/inventory'
+    | '/campaigns/$id'
+    | '/campaigns/new'
+    | '/api/export/$campaignId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/export/$campaignId'
-  id: '__root__' | '/' | '/api/export/$campaignId'
+  to:
+    | '/'
+    | '/login'
+    | '/campaigns'
+    | '/config'
+    | '/inventory'
+    | '/campaigns/$id'
+    | '/campaigns/new'
+    | '/api/export/$campaignId'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authed'
+    | '/login'
+    | '/_authed/campaigns'
+    | '/_authed/config'
+    | '/_authed/inventory'
+    | '/_authed/campaigns/$id'
+    | '/_authed/campaigns/new'
+    | '/api/export/$campaignId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthedRoute: typeof AuthedRouteWithChildren
+  LoginRoute: typeof LoginRoute
   ApiExportCampaignIdRoute: typeof ApiExportCampaignIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed': {
+      id: '/_authed'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authed/inventory': {
+      id: '/_authed/inventory'
+      path: '/inventory'
+      fullPath: '/inventory'
+      preLoaderRoute: typeof AuthedInventoryRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/config': {
+      id: '/_authed/config'
+      path: '/config'
+      fullPath: '/config'
+      preLoaderRoute: typeof AuthedConfigRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/campaigns': {
+      id: '/_authed/campaigns'
+      path: '/campaigns'
+      fullPath: '/campaigns'
+      preLoaderRoute: typeof AuthedCampaignsRouteImport
+      parentRoute: typeof AuthedRoute
     }
     '/api/export/$campaignId': {
       id: '/api/export/$campaignId'
@@ -65,13 +188,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiExportCampaignIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/campaigns/new': {
+      id: '/_authed/campaigns/new'
+      path: '/new'
+      fullPath: '/campaigns/new'
+      preLoaderRoute: typeof AuthedCampaignsNewRouteImport
+      parentRoute: typeof AuthedCampaignsRoute
+    }
+    '/_authed/campaigns/$id': {
+      id: '/_authed/campaigns/$id'
+      path: '/$id'
+      fullPath: '/campaigns/$id'
+      preLoaderRoute: typeof AuthedCampaignsIdRouteImport
+      parentRoute: typeof AuthedCampaignsRoute
+    }
   }
 }
 
+interface AuthedCampaignsRouteChildren {
+  AuthedCampaignsIdRoute: typeof AuthedCampaignsIdRoute
+  AuthedCampaignsNewRoute: typeof AuthedCampaignsNewRoute
+}
+
+const AuthedCampaignsRouteChildren: AuthedCampaignsRouteChildren = {
+  AuthedCampaignsIdRoute: AuthedCampaignsIdRoute,
+  AuthedCampaignsNewRoute: AuthedCampaignsNewRoute,
+}
+
+const AuthedCampaignsRouteWithChildren = AuthedCampaignsRoute._addFileChildren(
+  AuthedCampaignsRouteChildren,
+)
+
+interface AuthedRouteChildren {
+  AuthedCampaignsRoute: typeof AuthedCampaignsRouteWithChildren
+  AuthedConfigRoute: typeof AuthedConfigRoute
+  AuthedInventoryRoute: typeof AuthedInventoryRoute
+}
+
+const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedCampaignsRoute: AuthedCampaignsRouteWithChildren,
+  AuthedConfigRoute: AuthedConfigRoute,
+  AuthedInventoryRoute: AuthedInventoryRoute,
+}
+
+const AuthedRouteWithChildren =
+  AuthedRoute._addFileChildren(AuthedRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthedRoute: AuthedRouteWithChildren,
+  LoginRoute: LoginRoute,
   ApiExportCampaignIdRoute: ApiExportCampaignIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
