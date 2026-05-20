@@ -16,7 +16,7 @@ export function SidebarShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen overflow-x-hidden bg-background">
       <aside className="fixed inset-y-0 left-0 z-10 flex w-[236px] flex-col border-r border-sidebar-border/60 bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(30,41,59,0.96))] text-sidebar-foreground shadow-[12px_0_40px_rgba(15,23,42,0.18)]">
         <div className="px-4 pt-4">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur">
@@ -89,8 +89,8 @@ export function SidebarShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <main className="ml-[236px] min-h-screen flex-1">
-        <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.35),rgba(248,250,252,0.8))]">
+      <main className="ml-[236px] min-h-screen min-w-0 flex-1 overflow-x-hidden">
+        <div className="min-h-screen min-w-0 overflow-x-hidden bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.35),rgba(248,250,252,0.8))]">
           {children}
         </div>
       </main>

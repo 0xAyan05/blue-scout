@@ -334,9 +334,9 @@ export default function CampaignDetailPage() {
 
   return (
     <TooltipProvider>
-      <div>
+      <div className="min-w-0 overflow-x-hidden">
         <div className="sticky top-0 z-10 border-b border-white/60 bg-background/90 backdrop-blur-xl">
-          <div className="flex items-center justify-between gap-4 px-6 py-4">
+          <div className="flex items-center justify-between gap-4 overflow-x-hidden px-6 py-4">
             <div className="flex min-w-0 items-center gap-3">
               <Link
                 href="/campaigns"
@@ -354,7 +354,7 @@ export default function CampaignDetailPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs">
+            <div className="flex shrink-0 items-center gap-2 text-xs">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="inline-flex items-center gap-1 rounded-full border border-slate-200/80 bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur">
@@ -390,7 +390,7 @@ export default function CampaignDetailPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-4 bg-[linear-gradient(135deg,rgba(15,23,42,1),rgba(30,41,59,0.98))] px-6 py-4 text-sm text-sidebar-foreground">
+          <div className="grid grid-cols-4 gap-4 overflow-x-auto bg-[linear-gradient(135deg,rgba(15,23,42,1),rgba(30,41,59,0.98))] px-6 py-4 text-sm text-sidebar-foreground">
             <div className="rounded-xl border border-white/8 bg-white/5 px-4 py-3">
               <span className="text-sidebar-foreground/60">Links Selected:</span>
               <strong className="ml-1">{linksSelected}</strong>
@@ -453,7 +453,7 @@ export default function CampaignDetailPage() {
         )}
 
         {!isScoring && results && (
-          <div className="p-6">
+          <div className="min-w-0 overflow-x-hidden p-6">
             <div className="mb-4 flex items-center gap-2 border-b">
               <button
                 onClick={() => setTab("shortlist")}
@@ -477,71 +477,74 @@ export default function CampaignDetailPage() {
 
             {tab === "shortlist" && (
               <>
-                <div className="mb-4 grid grid-cols-[minmax(220px,1fr)_120px_120px_120px_120px_auto] items-center gap-2">
-                  <div className="relative">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <div className="mb-4 overflow-x-auto">
+                  <div className="flex min-w-[1120px] items-center gap-2">
+                    <div className="relative min-w-[320px] flex-1">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        placeholder="Search domains..."
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
                     <Input
-                      placeholder="Search domains..."
-                      value={search}
-                      onChange={(event) => setSearch(event.target.value)}
-                      className="pl-9"
+                      placeholder="Min Score"
+                      value={minScore}
+                      onChange={(event) => setMinScore(event.target.value)}
+                      type="number"
+                      min={0}
+                      max={100}
+                      className="w-[140px]"
                     />
-                  </div>
-                  <Input
-                    placeholder="Min Score"
-                    value={minScore}
-                    onChange={(event) => setMinScore(event.target.value)}
-                    type="number"
-                    min={0}
-                    max={100}
-                  />
-                  <select
-                    className="h-10 rounded-md border bg-background px-3 text-sm"
-                    value={geoFilter}
-                    onChange={(event) => setGeoFilter(event.target.value)}
-                  >
-                    {geoOptions.map((option) => (
-                      <option key={option} value={option}>
-                        Geo: {option}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="h-10 rounded-md border bg-background px-3 text-sm"
-                    value={linkTypeFilter}
-                    onChange={(event) => setLinkTypeFilter(event.target.value)}
-                  >
-                    {linkTypeOptions.map((option) => (
-                      <option key={option} value={option}>
-                        Link Type: {option}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="h-10 rounded-md border bg-background px-3 text-sm"
-                    value={rankingFilter}
-                    onChange={(event) => setRankingFilter(event.target.value)}
-                  >
-                    {rankingOptions.map((option) => (
-                      <option key={option} value={option}>
-                        Ranking: {option}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="ml-auto inline-flex overflow-hidden rounded-md border">
-                    {[25, 50, 100].map((size) => (
-                      <button
-                        key={size}
-                        onClick={() => setShortlistSize(size as 25 | 50 | 100)}
-                        className={`px-3 py-1.5 text-xs ${
-                          shortlistSize === size
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-background hover:bg-accent"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
+                    <select
+                      className="h-10 w-[150px] rounded-md border bg-background px-3 text-sm"
+                      value={geoFilter}
+                      onChange={(event) => setGeoFilter(event.target.value)}
+                    >
+                      {geoOptions.map((option) => (
+                        <option key={option} value={option}>
+                          Geo: {option}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="h-10 w-[170px] rounded-md border bg-background px-3 text-sm"
+                      value={linkTypeFilter}
+                      onChange={(event) => setLinkTypeFilter(event.target.value)}
+                    >
+                      {linkTypeOptions.map((option) => (
+                        <option key={option} value={option}>
+                          Link Type: {option}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="h-10 w-[150px] rounded-md border bg-background px-3 text-sm"
+                      value={rankingFilter}
+                      onChange={(event) => setRankingFilter(event.target.value)}
+                    >
+                      {rankingOptions.map((option) => (
+                        <option key={option} value={option}>
+                          Ranking: {option}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="ml-auto inline-flex overflow-hidden rounded-md border">
+                      {[25, 50, 100].map((size) => (
+                        <button
+                          key={size}
+                          onClick={() => setShortlistSize(size as 25 | 50 | 100)}
+                          className={`px-3 py-1.5 text-xs ${
+                            shortlistSize === size
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-background hover:bg-accent"
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -550,8 +553,8 @@ export default function CampaignDetailPage() {
                   Showing {shortlist.length} shortlisted domains after filters
                 </div>
 
-                <div className="surface-card overflow-hidden">
-                  <table className="w-full text-sm">
+                <div className="surface-card overflow-x-auto overflow-y-hidden">
+                  <table className="min-w-[1500px] w-full text-sm">
                     <thead className="bg-slate-50/90 text-xs uppercase tracking-wide text-muted-foreground">
                       <tr>
                         <th className="px-3 py-2 text-left">#</th>
@@ -720,8 +723,8 @@ export default function CampaignDetailPage() {
             {tab === "disqualified" && (
               <>
                 <div className="mb-3 text-sm font-medium">{disqualified.length} domains disqualified</div>
-                <div className="surface-card overflow-hidden">
-                  <table className="w-full text-sm">
+                <div className="surface-card overflow-x-auto overflow-y-hidden">
+                  <table className="min-w-[1100px] w-full text-sm">
                     <thead className="bg-slate-50/90 text-xs uppercase tracking-wide text-muted-foreground">
                       <tr>
                         <th className="px-3 py-2 text-left">Domain</th>

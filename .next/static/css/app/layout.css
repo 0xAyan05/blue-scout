@@ -234,6 +234,9 @@
   .invisible {
     visibility: hidden;
   }
+  .visible {
+    visibility: visible;
+  }
   .sr-only {
     position: absolute;
     width: 1px;
@@ -628,6 +631,15 @@
   .w-\[100px\] {
     width: 100px;
   }
+  .w-\[140px\] {
+    width: 140px;
+  }
+  .w-\[150px\] {
+    width: 150px;
+  }
+  .w-\[170px\] {
+    width: 170px;
+  }
   .w-\[236px\] {
     width: 236px;
   }
@@ -696,6 +708,18 @@
   }
   .min-w-\[12rem\] {
     min-width: 12rem;
+  }
+  .min-w-\[320px\] {
+    min-width: 320px;
+  }
+  .min-w-\[1100px\] {
+    min-width: 1100px;
+  }
+  .min-w-\[1120px\] {
+    min-width: 1120px;
+  }
+  .min-w-\[1500px\] {
+    min-width: 1500px;
   }
   .min-w-\[var\(--radix-select-trigger-width\)\] {
     min-width: var(--radix-select-trigger-width);
@@ -804,9 +828,6 @@
   }
   .grid-cols-\[140px_1fr_56px\] {
     grid-template-columns: 140px 1fr 56px;
-  }
-  .grid-cols-\[minmax\(220px\,1fr\)_120px_120px_120px_120px_auto\] {
-    grid-template-columns: minmax(220px,1fr) 120px 120px 120px 120px auto;
   }
   .flex-col {
     flex-direction: column;
@@ -921,11 +942,17 @@
   .overflow-hidden {
     overflow: hidden;
   }
+  .overflow-x-auto {
+    overflow-x: auto;
+  }
   .overflow-x-hidden {
     overflow-x: hidden;
   }
   .overflow-y-auto {
     overflow-y: auto;
+  }
+  .overflow-y-hidden {
+    overflow-y: hidden;
   }
   .rounded {
     border-radius: 0.25rem;
@@ -3607,6 +3634,7 @@
   html,
   body {
     min-height: 100%;
+    overflow-x: hidden;
   }
   body {
     background-color: var(--color-background);
