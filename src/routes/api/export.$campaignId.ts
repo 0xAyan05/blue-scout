@@ -187,7 +187,7 @@ export const Route = createFileRoute("/api/export/$campaignId")({
         // Persist a copy
         await supabaseAdmin.from("campaign_exports").insert({
           campaign_id: id,
-          file_data: buf,
+          file_data: buf.toString("base64"),
         });
         await supabaseAdmin
           .from("campaigns")
