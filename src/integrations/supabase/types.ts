@@ -14,7 +14,264 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      campaign_exports: {
+        Row: {
+          campaign_id: string
+          created_at: string | null
+          file_data: string
+          id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string | null
+          file_data: string
+          id?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string | null
+          file_data?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_exports_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_results: {
+        Row: {
+          campaign_id: string
+          contact_email: string | null
+          disqualified: boolean | null
+          disqualify_reason: string | null
+          domain: string
+          dr: number | null
+          geo: string | null
+          id: string
+          included: boolean | null
+          link_type: string | null
+          price: number | null
+          rank_position: number | null
+          ranking: string | null
+          reasoning: string | null
+          red_flags: string | null
+          score: number | null
+          score_breakdown: Json | null
+          tat: number | null
+          traffic: number | null
+        }
+        Insert: {
+          campaign_id: string
+          contact_email?: string | null
+          disqualified?: boolean | null
+          disqualify_reason?: string | null
+          domain: string
+          dr?: number | null
+          geo?: string | null
+          id?: string
+          included?: boolean | null
+          link_type?: string | null
+          price?: number | null
+          rank_position?: number | null
+          ranking?: string | null
+          reasoning?: string | null
+          red_flags?: string | null
+          score?: number | null
+          score_breakdown?: Json | null
+          tat?: number | null
+          traffic?: number | null
+        }
+        Update: {
+          campaign_id?: string
+          contact_email?: string | null
+          disqualified?: boolean | null
+          disqualify_reason?: string | null
+          domain?: string
+          dr?: number | null
+          geo?: string | null
+          id?: string
+          included?: boolean | null
+          link_type?: string | null
+          price?: number | null
+          rank_position?: number | null
+          ranking?: string | null
+          reasoning?: string | null
+          red_flags?: string | null
+          score?: number | null
+          score_breakdown?: Json | null
+          tat?: number | null
+          traffic?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_results_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          budget_per_link: number
+          client_name: string
+          client_niche: string
+          created_at: string | null
+          geo_focus: Json
+          id: string
+          link_count_goal: number
+          link_preference: string
+          min_dr: number
+          min_traffic: number
+          scoring_config_id: string | null
+          shortlist_size: number
+          status: string
+          target_pages: Json
+          updated_at: string | null
+          vendor_snapshot: string | null
+        }
+        Insert: {
+          budget_per_link: number
+          client_name: string
+          client_niche: string
+          created_at?: string | null
+          geo_focus: Json
+          id?: string
+          link_count_goal: number
+          link_preference: string
+          min_dr?: number
+          min_traffic?: number
+          scoring_config_id?: string | null
+          shortlist_size?: number
+          status?: string
+          target_pages: Json
+          updated_at?: string | null
+          vendor_snapshot?: string | null
+        }
+        Update: {
+          budget_per_link?: number
+          client_name?: string
+          client_niche?: string
+          created_at?: string | null
+          geo_focus?: Json
+          id?: string
+          link_count_goal?: number
+          link_preference?: string
+          min_dr?: number
+          min_traffic?: number
+          scoring_config_id?: string | null
+          shortlist_size?: number
+          status?: string
+          target_pages?: Json
+          updated_at?: string | null
+          vendor_snapshot?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_scoring_config_id_fkey"
+            columns: ["scoring_config_id"]
+            isOneToOne: false
+            referencedRelation: "scoring_config"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scoring_config: {
+        Row: {
+          created_at: string | null
+          disqualifiers: Json
+          id: string
+          is_active: boolean | null
+          label: string | null
+          niche_prompt: string | null
+          overrides: Json | null
+          version: number
+          weights: Json
+        }
+        Insert: {
+          created_at?: string | null
+          disqualifiers: Json
+          id?: string
+          is_active?: boolean | null
+          label?: string | null
+          niche_prompt?: string | null
+          overrides?: Json | null
+          version?: never
+          weights: Json
+        }
+        Update: {
+          created_at?: string | null
+          disqualifiers?: Json
+          id?: string
+          is_active?: boolean | null
+          label?: string | null
+          niche_prompt?: string | null
+          overrides?: Json | null
+          version?: never
+          weights?: Json
+        }
+        Relationships: []
+      }
+      vendors: {
+        Row: {
+          complementary_niche: string | null
+          contact_email: string | null
+          domain: string
+          dr: number | null
+          geo: string | null
+          id: string
+          indirect_niche: string | null
+          link_type: string | null
+          main_niche: string | null
+          price: number | null
+          ranking: string | null
+          red_flags: string | null
+          tat: number | null
+          traffic: number | null
+          uploaded_at: string | null
+        }
+        Insert: {
+          complementary_niche?: string | null
+          contact_email?: string | null
+          domain: string
+          dr?: number | null
+          geo?: string | null
+          id?: string
+          indirect_niche?: string | null
+          link_type?: string | null
+          main_niche?: string | null
+          price?: number | null
+          ranking?: string | null
+          red_flags?: string | null
+          tat?: number | null
+          traffic?: number | null
+          uploaded_at?: string | null
+        }
+        Update: {
+          complementary_niche?: string | null
+          contact_email?: string | null
+          domain?: string
+          dr?: number | null
+          geo?: string | null
+          id?: string
+          indirect_niche?: string | null
+          link_type?: string | null
+          main_niche?: string | null
+          price?: number | null
+          ranking?: string | null
+          red_flags?: string | null
+          tat?: number | null
+          traffic?: number | null
+          uploaded_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
