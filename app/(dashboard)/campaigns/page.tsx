@@ -88,8 +88,12 @@ export default function CampaignsPage() {
     mutationFn: async (id: string) => {
       const response = await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
       if (!response.ok) {
-        const payload = (await response.json()) as { error?: string };
-        throw new Error(payload.error ?? "Failed to delete campaign");
+        const payload = (await response.json()) as { error?: string; code?: string };
+        const error = new Error(payload.error ?? "Failed to delete campaign") as Error & {
+          code?: string;
+        };
+        error.code = payload.code;
+        throw error;
       }
       return id;
     },
@@ -101,7 +105,25 @@ export default function CampaignsPage() {
       );
       await queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Delete failed"),
+    onError: async (error) => {
+      const pendingId = pendingDelete?.id;
+      const code =
+        error instanceof Error && "code" in error
+          ? (error as Error & { code?: string }).code
+          : undefined;
+
+      if (pendingId && code === "CAMPAIGN_NOT_FOUND") {
+        queryClient.setQueryData<Campaign[]>(["campaigns"], (current) =>
+          (current ?? []).filter((campaign) => campaign.id !== pendingId),
+        );
+        setPendingDelete(null);
+        await queryClient.invalidateQueries({ queryKey: ["campaigns"] });
+        toast.success("Campaign removed");
+        return;
+      }
+
+      toast.error(error instanceof Error ? error.message : "Delete failed");
+    },
   });
 
   const hasVendors = (inventory?.count ?? 0) > 0;

@@ -21,10 +21,12 @@ export function SidebarShell({ children }: { children: React.ReactNode }) {
         <div className="px-5 pt-5">
           <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.09),rgba(255,255,255,0.04))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[linear-gradient(145deg,rgba(129,140,248,1),rgba(79,70,229,1))] text-primary-foreground shadow-[0_14px_30px_rgba(79,70,229,0.4)]">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                  <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
-                </svg>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/95 p-2 shadow-[0_14px_30px_rgba(15,23,42,0.18)] ring-1 ring-white/20">
+                <img
+                  src="https://bluetree.digital/wp-content/uploads/logo-dark-1-1-1.svg"
+                  alt="BlueTree logo"
+                  className="h-8 w-8 object-contain"
+                />
               </div>
               <div>
                 <div className="text-[11px] uppercase tracking-[0.28em] text-sidebar-foreground/50">
