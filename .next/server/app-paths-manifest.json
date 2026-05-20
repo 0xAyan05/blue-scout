@@ -1,22 +1,13 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/page": "app/page.js",
-  "/api/campaigns/[id]/restart/route": "app/api/campaigns/[id]/restart/route.js",
+  "/api/campaigns/create/route": "app/api/campaigns/create/route.js",
+  "/api/campaigns/[id]/route": "app/api/campaigns/[id]/route.js",
+  "/api/campaigns/[id]/status/route": "app/api/campaigns/[id]/status/route.js",
   "/api/campaigns/[id]/results/route": "app/api/campaigns/[id]/results/route.js",
-  "/api/campaigns/[id]/results/[resultId]/route": "app/api/campaigns/[id]/results/[resultId]/route.js",
   "/api/campaigns/[id]/export/route": "app/api/campaigns/[id]/export/route.js",
   "/api/campaigns/route": "app/api/campaigns/route.js",
-  "/api/campaigns/create/route": "app/api/campaigns/create/route.js",
-  "/api/campaigns/[id]/status/route": "app/api/campaigns/[id]/status/route.js",
-  "/api/config/[id]/restore/route": "app/api/config/[id]/restore/route.js",
   "/api/inventory/status/route": "app/api/inventory/status/route.js",
-  "/api/campaigns/[id]/score/route": "app/api/campaigns/[id]/score/route.js",
-  "/api/campaigns/[id]/route": "app/api/campaigns/[id]/route.js",
-  "/api/config/route": "app/api/config/route.js",
-  "/api/inventory/upload/route": "app/api/inventory/upload/route.js",
-  "/(dashboard)/campaigns/[id]/page": "app/(dashboard)/campaigns/[id]/page.js",
   "/(dashboard)/campaigns/page": "app/(dashboard)/campaigns/page.js",
   "/(dashboard)/inventory/page": "app/(dashboard)/inventory/page.js",
-  "/(dashboard)/campaigns/new/page": "app/(dashboard)/campaigns/new/page.js",
-  "/(dashboard)/config/page": "app/(dashboard)/config/page.js"
+  "/(dashboard)/campaigns/[id]/page": "app/(dashboard)/campaigns/[id]/page.js",
+  "/(dashboard)/campaigns/new/page": "app/(dashboard)/campaigns/new/page.js"
 }

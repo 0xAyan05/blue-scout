@@ -20,20 +20,27 @@ export function SidebarShell({ children }: { children: React.ReactNode }) {
       <aside className="fixed inset-y-0 left-0 z-10 flex w-[252px] flex-col border-r border-white/8 bg-[radial-gradient(circle_at_top,rgba(129,140,248,0.18),transparent_18%),linear-gradient(180deg,rgba(15,23,42,1),rgba(20,29,48,0.98)_48%,rgba(17,24,39,1))] text-sidebar-foreground shadow-[18px_0_55px_rgba(15,23,42,0.22)]">
         <div className="px-5 pt-5">
           <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.09),rgba(255,255,255,0.04))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/95 p-2 shadow-[0_14px_30px_rgba(15,23,42,0.18)] ring-1 ring-white/20">
-                <img
-                  src="https://bluetree.digital/wp-content/uploads/logo-dark-1-1-1.svg"
-                  alt="BlueTree logo"
-                  className="h-8 w-8 object-contain"
-                />
-              </div>
-              <div>
-                <div className="text-[11px] uppercase tracking-[0.28em] text-sidebar-foreground/50">
-                  BlueTree
+            <div className="space-y-4">
+              <div className="flex items-center justify-start">
+                <div className="rounded-2xl bg-white/96 px-3 py-2 shadow-[0_14px_30px_rgba(15,23,42,0.18)] ring-1 ring-white/20">
+                  <img
+                    src="https://bluetree.digital/wp-content/uploads/logo-dark-1-1-1.svg"
+                    alt="BlueTree logo"
+                    className="h-9 w-auto object-contain"
+                  />
                 </div>
-                <div className="text-[15px] font-semibold leading-tight text-white">Domain Selector</div>
-                <div className="mt-1 text-xs text-sidebar-foreground/48">Internal campaign selection workspace</div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 h-2.5 w-2.5 rounded-full bg-[linear-gradient(135deg,rgba(129,140,248,1),rgba(56,189,248,0.92))] shadow-[0_0_0_6px_rgba(129,140,248,0.12)]" />
+                <div>
+                  <div className="text-[11px] uppercase tracking-[0.28em] text-sidebar-foreground/50">
+                    BlueTree
+                  </div>
+                  <div className="text-[15px] font-semibold leading-tight text-white">Domain Selector</div>
+                  <div className="mt-1 text-xs text-sidebar-foreground/48">
+                    Internal campaign selection workspace
+                  </div>
+                </div>
               </div>
             </div>
           </div>
