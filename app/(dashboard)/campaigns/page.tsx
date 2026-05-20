@@ -91,10 +91,14 @@ export default function CampaignsPage() {
         const payload = (await response.json()) as { error?: string };
         throw new Error(payload.error ?? "Failed to delete campaign");
       }
+      return id;
     },
-    onSuccess: async () => {
+    onSuccess: async (deletedId) => {
       toast.success("Campaign deleted");
       setPendingDelete(null);
+      queryClient.setQueryData<Campaign[]>(["campaigns"], (current) =>
+        (current ?? []).filter((campaign) => campaign.id !== deletedId),
+      );
       await queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Delete failed"),

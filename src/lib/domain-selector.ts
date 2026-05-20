@@ -812,6 +812,38 @@ export async function toggleResultIncluded(
 }
 
 export async function deleteCampaign(id: string) {
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("campaigns")
+    .select("id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new AppError(existingError.message, "CAMPAIGN_DELETE_FAILED", 500);
+  }
+
+  if (!existing) {
+    throw new AppError("Campaign not found.", "CAMPAIGN_NOT_FOUND", 404);
+  }
+
+  const { error: exportsError } = await supabaseAdmin
+    .from("campaign_exports")
+    .delete()
+    .eq("campaign_id", id);
+
+  if (exportsError) {
+    throw new AppError(exportsError.message, "CAMPAIGN_DELETE_FAILED", 500);
+  }
+
+  const { error: resultsError } = await supabaseAdmin
+    .from("campaign_results")
+    .delete()
+    .eq("campaign_id", id);
+
+  if (resultsError) {
+    throw new AppError(resultsError.message, "CAMPAIGN_DELETE_FAILED", 500);
+  }
+
   const { error } = await supabaseAdmin.from("campaigns").delete().eq("id", id);
   if (error) throw new AppError(error.message, "CAMPAIGN_DELETE_FAILED", 500);
   return { ok: true };
