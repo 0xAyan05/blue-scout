@@ -73,11 +73,15 @@ export default function CampaignsPage() {
   const { data: campaigns, isLoading } = useQuery({
     queryKey: ["campaigns"],
     queryFn: () => fetchJson<Campaign[]>("/api/campaigns"),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const { data: inventory } = useQuery({
     queryKey: ["inventory"],
     queryFn: () => fetchJson<InventoryStatus>("/api/inventory/status"),
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const deleteMutation = useMutation({
@@ -115,7 +119,7 @@ export default function CampaignsPage() {
     return (
       <TooltipProvider>
         <div className="flex min-h-screen items-center justify-center p-8">
-          <div className="max-w-xl text-center">
+          <div className="surface-panel max-w-xl px-10 py-12 text-center">
             <svg
               viewBox="0 0 120 120"
               fill="none"
@@ -128,8 +132,9 @@ export default function CampaignsPage() {
               <circle cx="80" cy="78" r="16" />
               <path d="m92 90 10 10" />
             </svg>
-            <h2 className="mt-5 text-2xl font-semibold">No campaigns yet</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <div className="section-title">Campaign Workspace</div>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">No campaigns yet</h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
               Upload your vendor inventory first, then create your first campaign.
             </p>
             <div className="mt-6 flex justify-center gap-3">
@@ -158,10 +163,11 @@ export default function CampaignsPage() {
   return (
     <TooltipProvider>
       <div className="p-6">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-end justify-between gap-4">
           <div>
+            <div className="section-title">Operations</div>
             <h1 className="page-title">Campaigns</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               Track live scoring jobs, reopen shortlist decisions, and export finished campaigns.
             </p>
           </div>
@@ -179,10 +185,10 @@ export default function CampaignsPage() {
           )}
         </div>
 
-        <div className="surface-card overflow-hidden">
+        <div className="surface-panel overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50/90">
-              <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <thead className="bg-[linear-gradient(180deg,rgba(248,250,252,0.92),rgba(255,255,255,0.7))]">
+              <tr className="table-header text-left">
                 <th className="px-4 py-3 font-medium">Client</th>
                 <th className="px-4 py-3 font-medium">Niche</th>
                 <th className="px-4 py-3 font-medium">Created</th>
@@ -192,31 +198,32 @@ export default function CampaignsPage() {
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-slate-200/70">
               {campaigns.map((campaign) => (
-                <tr key={campaign.id} className="hover:bg-slate-50/70">
-                  <td className="px-4 py-3 font-semibold">
-                    <Link href={`/campaigns/${campaign.id}`} className="hover:underline">
+                <tr key={campaign.id} className="transition-colors hover:bg-white/72">
+                  <td className="px-4 py-4 font-semibold">
+                    <Link href={`/campaigns/${campaign.id}`} className="hover:text-primary hover:underline">
                       {campaign.client_name}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">{campaign.client_niche}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatDate(campaign.created_at)}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-4 text-muted-foreground">{campaign.client_niche}</td>
+                  <td className="px-4 py-4 text-muted-foreground">{formatDate(campaign.created_at)}</td>
+                  <td className="px-4 py-4">
                     {campaign.included_count} / {campaign.link_count_goal}
                   </td>
-                  <td className="px-4 py-3">${campaign.budget_per_link}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-4 font-medium">${campaign.budget_per_link}</td>
+                  <td className="px-4 py-4">
                     <StatusBadge status={campaign.status} />
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-4">
                     <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="ghost" onClick={() => router.push(`/campaigns/${campaign.id}`)}>
+                      <Button size="sm" variant="ghost" className="rounded-xl" onClick={() => router.push(`/campaigns/${campaign.id}`)}>
                         Open
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
+                        className="rounded-xl"
                         onClick={() =>
                           setPendingDelete({ id: campaign.id, name: campaign.client_name })
                         }

@@ -85,12 +85,13 @@ export default function InventoryPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-6">
+      <div className="section-title">Inventory Management</div>
       <h1 className="page-title">Vendor Inventory</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">
         Replace the active publisher database with a validated CSV snapshot.
       </p>
 
-      <div className="surface-card mt-6 p-5">
+      <div className="surface-panel mt-6 p-6">
         {isLoading ? (
           <div className="space-y-2">
             <div className="h-5 w-40 animate-pulse rounded bg-muted" />
@@ -110,8 +111,8 @@ export default function InventoryPage() {
         )}
       </div>
 
-      <div className="surface-card mt-6 p-5">
-        <label className="block cursor-pointer rounded-2xl border-2 border-dashed border-slate-300/90 bg-[linear-gradient(180deg,rgba(248,250,252,0.9),rgba(255,255,255,0.85))] p-10 text-center transition hover:border-primary/50 hover:bg-accent/40">
+      <div className="surface-panel mt-6 p-6">
+        <label className="block cursor-pointer rounded-[28px] border-2 border-dashed border-slate-300/90 bg-[radial-gradient(circle_at_top,rgba(129,140,248,0.09),transparent_26%),linear-gradient(180deg,rgba(248,250,252,0.92),rgba(255,255,255,0.86))] p-12 text-center transition hover:border-primary/50 hover:bg-accent/40">
           <input
             type="file"
             accept=".csv"

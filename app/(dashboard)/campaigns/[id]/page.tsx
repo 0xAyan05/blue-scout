@@ -335,7 +335,7 @@ export default function CampaignDetailPage() {
   return (
     <TooltipProvider>
       <div className="min-w-0 overflow-x-hidden">
-        <div className="sticky top-0 z-10 border-b border-white/60 bg-background/90 backdrop-blur-xl">
+        <div className="sticky top-0 z-10 border-b border-white/60 bg-background/88 backdrop-blur-2xl">
           <div className="flex items-center justify-between gap-4 overflow-x-hidden px-6 py-4">
             <div className="flex min-w-0 items-center gap-3">
               <Link
@@ -346,6 +346,7 @@ export default function CampaignDetailPage() {
                 Campaigns
               </Link>
               <div className="min-w-0 text-sm">
+                <div className="section-title mb-1">Campaign Workspace</div>
                 <div className="flex items-center gap-2">
                   <div className="truncate font-semibold">{campaign.client_name}</div>
                   <StatusBadge status={resolvedStatus} />
@@ -357,7 +358,7 @@ export default function CampaignDetailPage() {
             <div className="flex shrink-0 items-center gap-2 text-xs">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="inline-flex items-center gap-1 rounded-full border border-slate-200/80 bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur">
+                  <div className="glass-pill inline-flex items-center gap-1 px-3 py-1.5">
                     <Info className="h-3.5 w-3.5" />
                     {configMeta
                       ? `Config v${configMeta.version} - ${configMeta.label ?? "Untitled"}`
@@ -372,7 +373,7 @@ export default function CampaignDetailPage() {
               </Tooltip>
 
               <div
-                className="inline-flex rounded-full border border-slate-200/80 bg-white/80 px-3 py-1.5 shadow-sm backdrop-blur"
+                className="glass-pill inline-flex px-3 py-1.5"
                 title={formatDateLong(inventoryStatus?.uploaded_at)}
               >
                 Inventory: {inventoryStatus?.count ?? 0} domains, uploaded{" "}
@@ -382,7 +383,7 @@ export default function CampaignDetailPage() {
               <Button
                 onClick={() => exportMutation.mutate()}
                 disabled={isScoring || exportMutation.isPending}
-                className="h-10 rounded-xl px-4 shadow-lg shadow-indigo-950/10"
+                className="h-11 rounded-2xl px-5 shadow-[0_14px_28px_rgba(79,70,229,0.28)]"
               >
                 <Download className="h-4 w-4" />
                 Export Campaign
@@ -390,20 +391,20 @@ export default function CampaignDetailPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-4 gap-4 overflow-x-auto bg-[linear-gradient(135deg,rgba(15,23,42,1),rgba(30,41,59,0.98))] px-6 py-4 text-sm text-sidebar-foreground">
-            <div className="rounded-xl border border-white/8 bg-white/5 px-4 py-3">
+          <div className="grid grid-cols-4 gap-4 overflow-x-auto bg-[linear-gradient(135deg,rgba(15,23,42,1),rgba(30,41,59,0.98))] px-6 py-4 text-sm text-sidebar-foreground premium-scrollbar">
+            <div className="rounded-2xl border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.05))] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <span className="text-sidebar-foreground/60">Links Selected:</span>
               <strong className="ml-1">{linksSelected}</strong>
             </div>
-            <div className="rounded-xl border border-white/8 bg-white/5 px-4 py-3">
+            <div className="rounded-2xl border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.05))] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <span className="text-sidebar-foreground/60">Total Spent:</span>
               <strong className="ml-1">${totalSpent.toFixed(0)}</strong>
             </div>
-            <div className="rounded-xl border border-white/8 bg-white/5 px-4 py-3">
+            <div className="rounded-2xl border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.05))] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <span className="text-sidebar-foreground/60">Budget Remaining:</span>
               <strong className="ml-1">${budgetRemaining.toFixed(0)}</strong>
             </div>
-            <div className="rounded-xl border border-white/8 bg-white/5 px-4 py-3">
+            <div className="rounded-2xl border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.05))] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <span className="text-sidebar-foreground/60">Avg DR:</span>
               <strong className="ml-1">{avgDr.toFixed(1)}</strong>
             </div>
@@ -433,7 +434,7 @@ export default function CampaignDetailPage() {
         )}
 
         {isScoring && !interrupted && (
-          <div className="surface-card m-6 p-4">
+          <div className="surface-panel m-6 p-5">
             <div className="mb-2 flex items-center justify-between text-sm">
               <span>
                 Scoring in progress - {status?.scored ?? 0} of {status?.total ?? 0} domains processed...
@@ -477,7 +478,7 @@ export default function CampaignDetailPage() {
 
             {tab === "shortlist" && (
               <>
-                <div className="mb-4 overflow-x-auto">
+                <div className="mb-4 overflow-x-auto premium-scrollbar">
                   <div className="flex min-w-[1120px] items-center gap-2">
                     <div className="relative min-w-[320px] flex-1">
                       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -530,7 +531,7 @@ export default function CampaignDetailPage() {
                         </option>
                       ))}
                     </select>
-                    <div className="ml-auto inline-flex overflow-hidden rounded-md border">
+                    <div className="ml-auto inline-flex overflow-hidden rounded-2xl border border-slate-200/80 bg-white/70 shadow-sm">
                       {[25, 50, 100].map((size) => (
                         <button
                           key={size}
@@ -553,9 +554,9 @@ export default function CampaignDetailPage() {
                   Showing {shortlist.length} shortlisted domains after filters
                 </div>
 
-                <div className="surface-card overflow-x-auto overflow-y-hidden">
+                <div className="surface-panel overflow-x-auto overflow-y-hidden premium-scrollbar">
                   <table className="min-w-[1500px] w-full text-sm">
-                    <thead className="bg-slate-50/90 text-xs uppercase tracking-wide text-muted-foreground">
+                    <thead className="bg-[linear-gradient(180deg,rgba(248,250,252,0.92),rgba(255,255,255,0.76))] table-header">
                       <tr>
                         <th className="px-3 py-2 text-left">#</th>
                         <th className="px-3 py-2 text-left">Domain</th>
@@ -573,7 +574,7 @@ export default function CampaignDetailPage() {
                         <th className="px-3 py-2 text-left">Include</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y">
+                    <tbody className="divide-y divide-slate-200/65">
                       {shortlist.map((row) => {
                         const isExpanded = !!expanded[row.id];
                         const breakdown = row.score_breakdown ?? {};
@@ -581,7 +582,7 @@ export default function CampaignDetailPage() {
 
                         return (
                           <Fragment key={row.id}>
-                            <tr className={row.included ? "" : "bg-rose-50"}>
+                            <tr className={`transition-colors hover:bg-white/72 ${row.included ? "" : "bg-rose-50/80"}`}>
                               <td className="px-3 py-2 text-muted-foreground">{row.rank_position}</td>
                               <td className="px-3 py-2 font-semibold">
                                 <a
@@ -594,10 +595,10 @@ export default function CampaignDetailPage() {
                                 </a>
                               </td>
                               <td className="px-3 py-2">
-                                <div>{Number(row.score ?? 0).toFixed(0)}/100</div>
-                                <div className="mt-1 h-1.5 w-16 rounded bg-muted">
+                                <div className="font-medium">{Number(row.score ?? 0).toFixed(0)}/100</div>
+                                <div className="mt-1.5 h-1.5 w-20 rounded-full bg-slate-200">
                                   <div
-                                    className="h-full rounded bg-primary"
+                                    className="h-full rounded-full bg-[linear-gradient(90deg,rgba(99,102,241,1),rgba(129,140,248,0.9))]"
                                     style={{ width: `${Number(row.score ?? 0)}%` }}
                                   />
                                 </div>
@@ -607,7 +608,7 @@ export default function CampaignDetailPage() {
                                   onClick={() =>
                                     setExpanded((current) => ({ ...current, [row.id]: !current[row.id] }))
                                   }
-                                  className="text-xs text-primary hover:underline"
+                                  className="text-xs font-medium text-primary hover:underline"
                                 >
                                   {isExpanded ? "v" : ">"} Details
                                 </button>
@@ -629,7 +630,7 @@ export default function CampaignDetailPage() {
                               <td className="px-3 py-2">{row.tat ? `${row.tat}d` : "-"}</td>
                               <td className="px-3 py-2">
                                 <span
-                                  className={`inline-flex rounded px-2 py-0.5 text-xs ${
+                                  className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
                                     (row.link_type ?? "").toLowerCase() === "dofollow"
                                       ? "bg-green-100 text-green-800"
                                       : "bg-slate-100 text-slate-700"
@@ -671,7 +672,7 @@ export default function CampaignDetailPage() {
                             </tr>
 
                             {isExpanded && (
-                              <tr className="bg-muted/30">
+                              <tr className="bg-slate-50/78">
                                 <td colSpan={14} className="px-4 py-4">
                                   <div className="space-y-2 text-xs">
                                     {[
@@ -723,9 +724,9 @@ export default function CampaignDetailPage() {
             {tab === "disqualified" && (
               <>
                 <div className="mb-3 text-sm font-medium">{disqualified.length} domains disqualified</div>
-                <div className="surface-card overflow-x-auto overflow-y-hidden">
+                <div className="surface-panel overflow-x-auto overflow-y-hidden premium-scrollbar">
                   <table className="min-w-[1100px] w-full text-sm">
-                    <thead className="bg-slate-50/90 text-xs uppercase tracking-wide text-muted-foreground">
+                    <thead className="bg-[linear-gradient(180deg,rgba(248,250,252,0.92),rgba(255,255,255,0.76))] table-header">
                       <tr>
                         <th className="px-3 py-2 text-left">Domain</th>
                         <th className="px-3 py-2 text-left">DR</th>

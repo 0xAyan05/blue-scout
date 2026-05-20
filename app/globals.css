@@ -34,30 +34,30 @@
 }
 
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.977 0.004 247.86);
-  --foreground: oklch(0.215 0.04 265.75);
-  --card: oklch(0.995 0.002 240);
-  --card-foreground: oklch(0.208 0.042 265.755);
+  --radius: 0.9rem;
+  --background: oklch(0.977 0.005 247.5);
+  --foreground: oklch(0.23 0.04 264);
+  --card: oklch(0.992 0.002 240);
+  --card-foreground: oklch(0.21 0.04 264);
   --popover: oklch(0.995 0.002 240);
-  --popover-foreground: oklch(0.208 0.042 265.755);
-  --primary: oklch(0.54 0.236 275.24);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.952 0.01 252.2);
+  --popover-foreground: oklch(0.21 0.04 264);
+  --primary: oklch(0.58 0.22 274);
+  --primary-foreground: oklch(0.985 0.003 247.858);
+  --secondary: oklch(0.952 0.012 252);
   --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.956 0.009 251.8);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.95 0.015 262.5);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --muted: oklch(0.962 0.008 252);
+  --muted-foreground: oklch(0.56 0.04 257);
+  --accent: oklch(0.955 0.014 261);
+  --accent-foreground: oklch(0.21 0.04 264);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.908 0.015 255.2);
-  --input: oklch(0.908 0.015 255.2);
-  --ring: oklch(0.511 0.262 276.966);
-  --sidebar: oklch(0.205 0.04 264.4);
+  --border: oklch(0.91 0.014 255);
+  --input: oklch(0.91 0.014 255);
+  --ring: oklch(0.58 0.22 274);
+  --sidebar: oklch(0.19 0.036 264);
   --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.292 0.048 262.2);
-  --sidebar-border: oklch(0.32 0.045 261.5);
+  --sidebar-accent: oklch(0.275 0.044 262);
+  --sidebar-border: oklch(0.3 0.04 261);
 }
 
 @layer base {
@@ -74,23 +74,57 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: ui-sans-serif, system-ui, -apple-system, "Inter", sans-serif;
+    font-family:
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      "Inter",
+      sans-serif;
     background-image:
-      radial-gradient(circle at top left, color-mix(in oklab, var(--color-primary) 10%, transparent) 0, transparent 32%),
-      linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(245,247,251,0.92) 100%);
+      radial-gradient(circle at top left, color-mix(in oklab, var(--color-primary) 11%, transparent) 0, transparent 28%),
+      radial-gradient(circle at top right, rgba(255, 255, 255, 0.88) 0, transparent 24%),
+      linear-gradient(180deg, rgba(255,255,255,0.94) 0%, rgba(245,247,251,0.96) 100%);
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-primary) 22%, white);
   }
 }
 
 @layer utilities {
   .surface-card {
-    @apply rounded-2xl border border-white/70 bg-white/85 shadow-[0_10px_30px_rgba(15,23,42,0.06)] backdrop-blur;
+    @apply rounded-[26px] border border-white/75 bg-white/82 shadow-[0_14px_42px_rgba(15,23,42,0.075)] backdrop-blur-xl;
   }
 
   .surface-soft {
-    @apply rounded-2xl border border-slate-200/70 bg-white/70 shadow-[0_6px_22px_rgba(15,23,42,0.04)] backdrop-blur;
+    @apply rounded-[22px] border border-slate-200/70 bg-white/68 shadow-[0_10px_26px_rgba(15,23,42,0.045)] backdrop-blur-xl;
+  }
+
+  .surface-panel {
+    @apply rounded-[28px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(248,250,252,0.84))] shadow-[0_18px_48px_rgba(15,23,42,0.08)] backdrop-blur-xl;
+  }
+
+  .glass-pill {
+    @apply rounded-full border border-white/75 bg-white/78 shadow-[0_4px_18px_rgba(15,23,42,0.06)] backdrop-blur-xl;
   }
 
   .page-title {
-    @apply text-2xl font-semibold tracking-tight text-slate-900;
+    @apply text-[30px] font-semibold tracking-tight text-slate-950;
+  }
+
+  .section-title {
+    @apply text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500;
+  }
+
+  .table-header {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500;
+  }
+
+  .premium-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(99, 102, 241, 0.38) rgba(226, 232, 240, 0.6);
   }
 }

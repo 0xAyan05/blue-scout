@@ -106,12 +106,13 @@ export default function ConfigPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-6">
+      <div className="section-title">Reasoning Layer</div>
       <h1 className="page-title">Scoring Configuration</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">
         Tune ranking logic for future campaigns and keep a restorable config history.
       </p>
 
-      <div className="surface-card mt-6 p-5">
+      <div className="surface-panel mt-6 p-6">
         <div className="text-sm">
           <strong>Active:</strong> Config v{data.active.version} - "{data.active.label ?? "-"}"
         </div>
@@ -121,7 +122,7 @@ export default function ConfigPage() {
         </div>
       </div>
 
-      <div className="surface-card mt-6 p-5">
+      <div className="surface-panel mt-6 p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Weights
         </h2>
@@ -158,7 +159,7 @@ export default function ConfigPage() {
         </div>
       </div>
 
-      <div className="surface-card mt-6 p-5">
+      <div className="surface-panel mt-6 p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Hard disqualifiers
         </h2>
@@ -176,7 +177,7 @@ export default function ConfigPage() {
         </p>
       </div>
 
-      <div className="surface-card mt-6 p-5">
+      <div className="surface-panel mt-6 p-6">
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Niche Prompt (optional)
         </h2>
@@ -188,7 +189,7 @@ export default function ConfigPage() {
         />
       </div>
 
-      <div className="surface-card mt-6 p-5">
+      <div className="surface-panel mt-6 p-6">
         <Label>Label for this version</Label>
         <Input
           className="mt-1"
@@ -206,7 +207,7 @@ export default function ConfigPage() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-lg border bg-card p-5">
+      <div className="surface-panel mt-6 p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Version history
         </h2>
