@@ -87,7 +87,22 @@ export const uploadInventory = createServerFn({ method: "POST" })
     }
 
     let skipped = 0;
-    const toInsert: Array<Record<string, unknown>> = [];
+    type VendorRow = {
+      domain: string;
+      main_niche: string | null;
+      complementary_niche: string | null;
+      indirect_niche: string | null;
+      dr: number;
+      traffic: number;
+      price: number | null;
+      geo: string | null;
+      link_type: string | null;
+      tat: number | null;
+      ranking: string | null;
+      red_flags: string | null;
+      contact_email: string | null;
+    };
+    const toInsert: VendorRow[] = [];
     for (const row of rows) {
       const domain = toStr(row[headerMap.domain]);
       const dr = toInt(row[headerMap.dr]);
