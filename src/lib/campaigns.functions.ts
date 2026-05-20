@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requirePassword } from "./require-password";
+import { runCampaignScoringToCompletion } from "./scoring.functions";
 
 const TargetPageSchema = z.object({
   url: z.string().url().max(2000),
@@ -21,25 +22,52 @@ const CreateCampaignSchema = z.object({
   shortlist_size: z.union([z.literal(25), z.literal(50), z.literal(100)]),
 });
 
+function startScoringInBackground(campaignId: string) {
+  void runCampaignScoringToCompletion(campaignId).catch((error) => {
+    console.error("Background scoring failed", error);
+  });
+}
+
 export const createCampaign = createServerFn({ method: "POST" })
   .middleware([requirePassword])
   .inputValidator((input) => CreateCampaignSchema.parse(input))
   .handler(async ({ data }) => {
-    const { count } = await supabaseAdmin
+    const { count: vendorCount } = await supabaseAdmin
       .from("vendors")
       .select("*", { count: "exact", head: true });
-    if (!count || count === 0) {
-      return { ok: false as const, code: "VENDOR_EMPTY", error: "No vendor inventory found." };
+
+    if (!vendorCount || vendorCount === 0) {
+      return {
+        ok: false as const,
+        code: "VENDOR_EMPTY",
+        error: "No vendor inventory found. Please upload your vendor CSV before creating a campaign.",
+      };
     }
+
+    const { data: latestVendor } = await supabaseAdmin
+      .from("vendors")
+      .select("uploaded_at")
+      .order("uploaded_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
     const { data: cfg } = await supabaseAdmin
       .from("scoring_config")
       .select("id")
       .eq("is_active", true)
       .maybeSingle();
+
     if (!cfg) {
-      return { ok: false as const, code: "CONFIG_MISSING", error: "No active scoring config." };
+      return {
+        ok: false as const,
+        code: "CONFIG_MISSING",
+        error: "No active scoring configuration found. Contact your admin.",
+      };
     }
-    const { data: c, error } = await supabaseAdmin
+
+    const vendorSnapshot = `${vendorCount} domains | uploaded ${latestVendor?.uploaded_at ?? "unknown"}`;
+
+    const { data: campaign, error } = await supabaseAdmin
       .from("campaigns")
       .insert({
         client_name: data.client_name,
@@ -53,12 +81,24 @@ export const createCampaign = createServerFn({ method: "POST" })
         link_preference: data.link_preference,
         shortlist_size: data.shortlist_size,
         scoring_config_id: cfg.id,
+        vendor_snapshot: vendorSnapshot,
         status: "scoring",
       })
       .select()
       .single();
-    if (error) throw new Error(error.message);
-    return { ok: true as const, id: c.id };
+
+    if (error || !campaign) {
+      console.error(error);
+      return {
+        ok: false as const,
+        code: "CAMPAIGN_CREATE_FAILED",
+        error: "Could not create campaign.",
+      };
+    }
+
+    startScoringInBackground(campaign.id);
+
+    return { ok: true as const, id: campaign.id };
   });
 
 export const listCampaigns = createServerFn({ method: "GET" })
@@ -70,9 +110,9 @@ export const listCampaigns = createServerFn({ method: "GET" })
       .order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
 
-    // Get include counts
-    const ids = (data ?? []).map((c) => c.id);
+    const ids = (data ?? []).map((campaign) => campaign.id);
     let counts: Record<string, number> = {};
+
     if (ids.length > 0) {
       const { data: rows } = await supabaseAdmin
         .from("campaign_results")
@@ -80,25 +120,53 @@ export const listCampaigns = createServerFn({ method: "GET" })
         .in("campaign_id", ids)
         .eq("included", true)
         .eq("disqualified", false);
-      counts = (rows ?? []).reduce<Record<string, number>>((acc, r) => {
-        acc[r.campaign_id] = (acc[r.campaign_id] ?? 0) + 1;
+
+      counts = (rows ?? []).reduce<Record<string, number>>((acc, row) => {
+        acc[row.campaign_id] = (acc[row.campaign_id] ?? 0) + 1;
         return acc;
       }, {});
     }
-    return (data ?? []).map((c) => ({ ...c, included_count: counts[c.id] ?? 0 }));
+
+    return (data ?? []).map((campaign) => ({
+      ...campaign,
+      included_count: counts[campaign.id] ?? 0,
+    }));
   });
 
 export const getCampaign = createServerFn({ method: "GET" })
   .middleware([requirePassword])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data }) => {
-    const { data: c, error } = await supabaseAdmin
+    const { data: campaign, error } = await supabaseAdmin
       .from("campaigns")
       .select("*")
       .eq("id", data.id)
       .single();
-    if (error) throw new Error(error.message);
-    return c;
+    if (error || !campaign) throw new Error(error?.message ?? "Campaign not found");
+
+    const [{ data: config }, { count: inventoryCount }, { data: latestVendor }] = await Promise.all([
+      supabaseAdmin
+        .from("scoring_config")
+        .select("id, version, label, weights")
+        .eq("id", campaign.scoring_config_id ?? "")
+        .maybeSingle(),
+      supabaseAdmin.from("vendors").select("*", { count: "exact", head: true }),
+      supabaseAdmin
+        .from("vendors")
+        .select("uploaded_at")
+        .order("uploaded_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    return {
+      ...campaign,
+      scoring_config_meta: config ?? null,
+      inventory_status: {
+        count: inventoryCount ?? 0,
+        uploaded_at: latestVendor?.uploaded_at ?? null,
+      },
+    };
   });
 
 export const deleteCampaign = createServerFn({ method: "POST" })
@@ -128,7 +196,7 @@ export const toggleResultIncluded = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z
       .object({ campaign_id: z.string().uuid(), result_id: z.string().uuid(), included: z.boolean() })
-      .parse(input)
+      .parse(input),
   )
   .handler(async ({ data }) => {
     const { error } = await supabaseAdmin
@@ -136,10 +204,12 @@ export const toggleResultIncluded = createServerFn({ method: "POST" })
       .update({ included: data.included })
       .eq("id", data.result_id);
     if (error) throw new Error(error.message);
+
     await supabaseAdmin
       .from("campaigns")
       .update({ updated_at: new Date().toISOString() })
       .eq("id", data.campaign_id);
+
     return { ok: true };
   });
 
@@ -147,7 +217,7 @@ export const getCampaignStatus = createServerFn({ method: "GET" })
   .middleware([requirePassword])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data }) => {
-    const { data: c } = await supabaseAdmin
+    const { data: campaign } = await supabaseAdmin
       .from("campaigns")
       .select("status")
       .eq("id", data.id)
@@ -159,7 +229,8 @@ export const getCampaignStatus = createServerFn({ method: "GET" })
     const { count: total } = await supabaseAdmin
       .from("vendors")
       .select("*", { count: "exact", head: true });
-    return { status: c?.status ?? "unknown", scored: scored ?? 0, total: total ?? 0 };
+
+    return { status: campaign?.status ?? "unknown", scored: scored ?? 0, total: total ?? 0 };
   });
 
 export const resetCampaign = createServerFn({ method: "POST" })
@@ -167,6 +238,12 @@ export const resetCampaign = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data }) => {
     await supabaseAdmin.from("campaign_results").delete().eq("campaign_id", data.id);
-    await supabaseAdmin.from("campaigns").update({ status: "scoring" }).eq("id", data.id);
+    await supabaseAdmin
+      .from("campaigns")
+      .update({ status: "scoring", updated_at: new Date().toISOString() })
+      .eq("id", data.id);
+
+    startScoringInBackground(data.id);
+
     return { ok: true };
   });
