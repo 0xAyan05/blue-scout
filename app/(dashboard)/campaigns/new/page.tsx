@@ -27,6 +27,15 @@ const GEOS = [
   "FI",
 ];
 
+function isValidUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export default function NewCampaignPage() {
   const router = useRouter();
   const [clientName, setClientName] = useState("");
@@ -40,11 +49,12 @@ export default function NewCampaignPage() {
   const [linkPref, setLinkPref] = useState<"dofollow" | "either">("either");
   const [shortlist, setShortlist] = useState<25 | 50 | 100>(50);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const pageErrors = useMemo(
     () =>
       pages.map((page) => ({
-        url: page.url.trim() === "",
+        url: page.url.trim() === "" || !isValidUrl(page.url.trim()),
         keyword: page.keyword.trim() === "",
       })),
     [pages],
@@ -67,14 +77,21 @@ export default function NewCampaignPage() {
   const valid =
     clientName.trim() &&
     clientNiche.trim() &&
-    pages.every((page) => page.url.trim() && page.keyword.trim()) &&
+    pages.every((page) => isValidUrl(page.url.trim()) && page.keyword.trim()) &&
+    Number.isFinite(budget) &&
     budget > 0 &&
+    Number.isFinite(goal) &&
     goal > 0 &&
+    Number.isFinite(minDr) &&
+    minDr >= 0 &&
+    Number.isFinite(minTraffic) &&
+    minTraffic >= 0 &&
     geos.length > 0;
 
   const submit = async () => {
     if (!valid) return;
     setSubmitting(true);
+    setSubmitError(null);
 
     try {
       const response = await fetch("/api/campaigns/create", {
@@ -96,14 +113,18 @@ export default function NewCampaignPage() {
 
       const payload = (await response.json()) as { id?: string; error?: string };
       if (!response.ok || !payload.id) {
-        toast.error(payload.error ?? "Failed to create campaign");
+        const message = payload.error ?? "Failed to create campaign";
+        setSubmitError(message);
+        toast.error(message);
         setSubmitting(false);
         return;
       }
 
       router.push(`/campaigns/${payload.id}`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create campaign");
+      const message = error instanceof Error ? error.message : "Failed to create campaign";
+      setSubmitError(message);
+      toast.error(message);
       setSubmitting(false);
     }
   };
@@ -170,7 +191,9 @@ export default function NewCampaignPage() {
           ))}
 
           {pages.some((_, index) => pageErrors[index]?.url || pageErrors[index]?.keyword) && (
-            <InlineError>Each target page needs both a URL and a primary keyword.</InlineError>
+            <InlineError>
+              Each target page needs a valid `http://` or `https://` URL and a primary keyword.
+            </InlineError>
           )}
 
           <Button
@@ -285,6 +308,7 @@ export default function NewCampaignPage() {
           {submitting ? "Starting..." : "Start Scoring ->"}
         </Button>
       </div>
+      {submitError && <InlineError>{submitError}</InlineError>}
     </div>
   );
 }

@@ -17,40 +17,49 @@ export class AppError extends Error {
 }
 
 export const campaignCreateSchema = z.object({
-  client_name: z.string().min(1).max(255),
-  client_niche: z.string().min(1).max(500),
+  client_name: z.string().trim().min(1).max(255),
+  client_niche: z.string().trim().min(1).max(500),
   target_pages: z
     .array(
       z.object({
-        url: z.string().url().max(2000),
-        keyword: z.string().min(1).max(500),
+        url: z.string().trim().url().max(2000),
+        keyword: z.string().trim().min(1).max(500),
       }),
     )
     .min(1)
     .max(50),
-  budget_per_link: z.number().min(1).max(100000),
-  link_count_goal: z.number().int().min(1).max(10000),
-  min_dr: z.number().int().min(0).max(100),
-  min_traffic: z.number().int().min(0),
-  geo_focus: z.array(z.string().min(1).max(20)).min(1).max(20),
+  budget_per_link: z.coerce.number().min(1).max(100000),
+  link_count_goal: z.coerce.number().int().min(1).max(10000),
+  min_dr: z.coerce.number().int().min(0).max(100),
+  min_traffic: z.coerce.number().int().min(0),
+  geo_focus: z.array(z.string().trim().min(1).max(20)).min(1).max(20),
   link_preference: z.enum(["dofollow", "either"]),
-  shortlist_size: z.union([z.literal(25), z.literal(50), z.literal(100)]),
+  shortlist_size: z.coerce.number().refine((value) => [25, 50, 100].includes(value), {
+    message: "Shortlist size must be one of 25, 50, or 100.",
+  }) as z.ZodType<25 | 50 | 100>,
 });
 
 const weightsSchema = z.object({
-  niche_match: z.number().min(0).max(100),
-  domain_rating: z.number().min(0).max(100),
-  traffic: z.number().min(0).max(100),
-  price_efficiency: z.number().min(0).max(100),
-  ranking_bonus: z.number().min(0).max(100),
-  geo_match: z.number().min(0).max(100),
-  no_red_flags: z.number().min(0).max(100),
+  niche_match: z.coerce.number().min(0).max(100),
+  domain_rating: z.coerce.number().min(0).max(100),
+  traffic: z.coerce.number().min(0).max(100),
+  price_efficiency: z.coerce.number().min(0).max(100),
+  ranking_bonus: z.coerce.number().min(0).max(100),
+  geo_match: z.coerce.number().min(0).max(100),
+  no_red_flags: z.coerce.number().min(0).max(100),
 });
 
 export const configSaveSchema = z.object({
-  label: z.string().min(1).max(255),
+  label: z.string().trim().min(1).max(255),
   weights: weightsSchema,
-  niche_prompt: z.string().max(5000).nullable().optional(),
+  niche_prompt: z
+    .union([z.string().max(5000), z.null(), z.undefined()])
+    .transform((value) => {
+      if (value == null) return null;
+      const trimmed = value.trim();
+      return trimmed === "" ? null : trimmed;
+    })
+    .optional(),
 });
 
 type CampaignCreateInput = z.infer<typeof campaignCreateSchema>;
@@ -115,6 +124,28 @@ const REQUIRED_COLS = [
 ] as const;
 
 const BATCH_SIZE = 200;
+const SHORTLIST_SIZES = [25, 50, 100] as const;
+
+const HEADER_ALIASES: Record<(typeof REQUIRED_COLS)[number], string[]> = {
+  domain: ["domain", "website", "publisher_domain"],
+  main_niche: ["main_niche", "main niche", "primary_niche", "primary niche"],
+  complementary_niche: [
+    "complementary_niche",
+    "complementary niche",
+    "secondary_niche",
+    "secondary niche",
+  ],
+  indirect_niche: ["indirect_niche", "indirect niche", "related_niche", "related niche"],
+  dr: ["dr", "domain rating", "domain_rating"],
+  traffic: ["traffic", "organic_traffic", "organic traffic", "monthly_traffic", "monthly traffic"],
+  price: ["price", "cost", "link_price", "link price"],
+  geo: ["geo", "geography", "country", "market"],
+  link_type: ["link_type", "link type", "follow_type", "follow type"],
+  tat: ["tat", "turnaround_time", "turnaround time"],
+  ranking: ["ranking", "quality_rating", "quality rating"],
+  red_flags: ["red_flags", "red flags", "flags"],
+  contact_email: ["contact_email", "contact email", "email"],
+};
 
 function toInt(value: unknown): number | null {
   if (value == null || value === "") return null;
@@ -134,6 +165,77 @@ function toStr(value: unknown): string | null {
   if (value == null) return null;
   const normalized = String(value).trim();
   return normalized === "" ? null : normalized;
+}
+
+function normalizeHeader(value: string) {
+  return value
+    .replace(/^\uFEFF/, "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function coerceCampaign(raw: CampaignCreateInput): CampaignCreateInput {
+  return {
+    ...raw,
+    client_name: raw.client_name.trim(),
+    client_niche: raw.client_niche.trim(),
+    target_pages: raw.target_pages.map((page) => ({
+      url: page.url.trim(),
+      keyword: page.keyword.trim(),
+    })),
+    geo_focus: raw.geo_focus.map((geo) => geo.trim()),
+    shortlist_size: raw.shortlist_size,
+  };
+}
+
+function coerceVendor(row: Vendor): Vendor {
+  return {
+    ...row,
+    domain: (toStr(row.domain) ?? "").toLowerCase(),
+    main_niche: toStr(row.main_niche),
+    complementary_niche: toStr(row.complementary_niche),
+    indirect_niche: toStr(row.indirect_niche),
+    dr: toInt(row.dr),
+    traffic: toInt(row.traffic),
+    price: toNum(row.price),
+    geo: toStr(row.geo),
+    link_type: toStr(row.link_type)?.toLowerCase() ?? null,
+    tat: toInt(row.tat),
+    ranking: toStr(row.ranking),
+    red_flags: toStr(row.red_flags),
+    contact_email: toStr(row.contact_email),
+  };
+}
+
+function coerceConfig(row: Config): Config {
+  const weights = weightsSchema.parse(row.weights);
+  const disqualifiers =
+    typeof row.disqualifiers === "object" && row.disqualifiers !== null
+      ? row.disqualifiers
+      : {};
+  const overrides =
+    typeof row.overrides === "object" && row.overrides !== null ? row.overrides : {};
+
+  const normalizedOverrides = Object.fromEntries(
+    Object.entries(overrides).map(([industry, override]) => [
+      industry,
+      weightsSchema.partial().parse(override),
+    ]),
+  );
+
+  return {
+    ...row,
+    weights,
+    disqualifiers: {
+      ranking_excluded: Array.isArray(disqualifiers.ranking_excluded)
+        ? disqualifiers.ranking_excluded.map((value) => String(value))
+        : [],
+    },
+    overrides: normalizedOverrides,
+    niche_prompt: row.niche_prompt?.trim() ? row.niche_prompt.trim() : null,
+  };
 }
 
 function resolveWeights(config: Config, clientNiche: string): Weights {
@@ -284,6 +386,10 @@ async function finalizeCampaign(campaignId: string, shortlistSize: number) {
     .eq("id", campaignId);
 }
 
+function toPostgresBytea(buffer: Buffer) {
+  return `\\x${buffer.toString("hex")}`;
+}
+
 async function ensureCampaignFinalized(campaignId: string) {
   const { data: campaignRow, error: campaignError } = await supabaseAdmin
     .from("campaigns")
@@ -340,13 +446,26 @@ export async function processScoringBatch(campaignId: string) {
     return { done: true, scored: scored ?? 0, total: total ?? 0 };
   }
 
-  const { data: configRow, error: configError } = await supabaseAdmin
+  const { count: total } = await supabaseAdmin
+    .from("vendors")
+    .select("*", { count: "exact", head: true });
+  const totalCount = total ?? 0;
+
+  if (totalCount === 0) {
+    throw new AppError(
+      "No vendor inventory found. Please upload your CSV first.",
+      "VENDOR_EMPTY",
+      400,
+    );
+  }
+
+  const { data: activeConfigRow, error: activeConfigError } = await supabaseAdmin
     .from("scoring_config")
     .select("*")
-    .eq("id", campaign.scoring_config_id ?? "")
+    .eq("is_active", true)
     .maybeSingle();
 
-  if (configError || !configRow) {
+  if (activeConfigError || !activeConfigRow) {
     await supabaseAdmin
       .from("campaigns")
       .update({
@@ -355,22 +474,18 @@ export async function processScoringBatch(campaignId: string) {
       })
       .eq("id", campaignId);
     throw new AppError(
-      "No active scoring configuration found. Contact your admin.",
+      "No active scoring configuration found.",
       "CONFIG_MISSING",
-      500,
+      404,
     );
   }
 
-  const config = configRow as unknown as Config;
-  const { count: total } = await supabaseAdmin
-    .from("vendors")
-    .select("*", { count: "exact", head: true });
+  const config = coerceConfig(activeConfigRow as unknown as Config);
   const { count: alreadyScored } = await supabaseAdmin
     .from("campaign_results")
     .select("*", { count: "exact", head: true })
     .eq("campaign_id", campaignId);
 
-  const totalCount = total ?? 0;
   const offset = alreadyScored ?? 0;
   if (offset >= totalCount) {
     await finalizeCampaign(campaignId, campaign.shortlist_size);
@@ -386,7 +501,7 @@ export async function processScoringBatch(campaignId: string) {
 
   const weights = resolveWeights(config, campaign.client_niche);
   const rowsToInsert = (vendors ?? []).map((row) => {
-    const vendor = row as unknown as Vendor;
+    const vendor = coerceVendor(row as unknown as Vendor);
     const disqualifyReason = checkDisqualified(vendor, campaign, config);
     if (disqualifyReason) {
       return {
@@ -498,7 +613,7 @@ export async function uploadInventoryCsv(csv: string) {
   } catch (error) {
     console.error(error);
     throw new AppError(
-      "Could not read this file. Ensure it is a valid CSV.",
+      "Could not parse this file. Ensure it is a valid CSV.",
       "UPLOAD_PARSE_ERROR",
       400,
     );
@@ -507,7 +622,7 @@ export async function uploadInventoryCsv(csv: string) {
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   if (!sheet) {
     throw new AppError(
-      "Could not read this file. Ensure it is a valid CSV.",
+      "Could not parse this file. Ensure it is a valid CSV.",
       "UPLOAD_PARSE_ERROR",
       400,
     );
@@ -516,7 +631,7 @@ export async function uploadInventoryCsv(csv: string) {
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
   if (rows.length === 0) {
     throw new AppError(
-      "Could not read this file. Ensure it is a valid CSV.",
+      "Could not parse this file. Ensure it is a valid CSV.",
       "UPLOAD_PARSE_ERROR",
       400,
     );
@@ -524,10 +639,19 @@ export async function uploadInventoryCsv(csv: string) {
 
   const headerMap: Record<string, string> = {};
   Object.keys(rows[0]).forEach((key) => {
-    headerMap[key.toLowerCase().trim()] = key;
+    headerMap[normalizeHeader(key)] = key;
   });
 
-  const missing = REQUIRED_COLS.filter((column) => !(column in headerMap));
+  const resolvedHeaders = Object.fromEntries(
+    REQUIRED_COLS.map((column) => {
+      const sourceHeader = HEADER_ALIASES[column]
+        .map((candidate) => headerMap[normalizeHeader(candidate)])
+        .find(Boolean);
+      return [column, sourceHeader ?? null];
+    }),
+  ) as Record<(typeof REQUIRED_COLS)[number], string | null>;
+
+  const missing = REQUIRED_COLS.filter((column) => !resolvedHeaders[column]);
   if (missing.length > 0) {
     throw new AppError(
       `Missing required columns: ${missing.join(", ")}`,
@@ -540,27 +664,27 @@ export async function uploadInventoryCsv(csv: string) {
   let skipped = 0;
   const toInsert: TablesInsert<"vendors">[] = [];
   for (const row of rows) {
-    const domain = toStr(row[headerMap.domain]);
-    const dr = toInt(row[headerMap.dr]);
-    const traffic = toInt(row[headerMap.traffic]);
+    const domain = toStr(row[resolvedHeaders.domain!])?.toLowerCase();
+    const dr = toInt(row[resolvedHeaders.dr!]);
+    const traffic = toInt(row[resolvedHeaders.traffic!]);
     if (!domain || dr == null || traffic == null) {
       skipped += 1;
       continue;
     }
     toInsert.push({
       domain,
-      main_niche: toStr(row[headerMap.main_niche]),
-      complementary_niche: toStr(row[headerMap.complementary_niche]),
-      indirect_niche: toStr(row[headerMap.indirect_niche]),
+      main_niche: toStr(row[resolvedHeaders.main_niche!]),
+      complementary_niche: toStr(row[resolvedHeaders.complementary_niche!]),
+      indirect_niche: toStr(row[resolvedHeaders.indirect_niche!]),
       dr,
       traffic,
-      price: toNum(row[headerMap.price]),
-      geo: toStr(row[headerMap.geo]),
-      link_type: toStr(row[headerMap.link_type])?.toLowerCase() ?? null,
-      tat: toInt(row[headerMap.tat]),
-      ranking: toStr(row[headerMap.ranking]),
-      red_flags: toStr(row[headerMap.red_flags]),
-      contact_email: toStr(row[headerMap.contact_email]),
+      price: toNum(row[resolvedHeaders.price!]),
+      geo: toStr(row[resolvedHeaders.geo!]),
+      link_type: toStr(row[resolvedHeaders.link_type!])?.toLowerCase() ?? null,
+      tat: toInt(row[resolvedHeaders.tat!]),
+      ranking: toStr(row[resolvedHeaders.ranking!]),
+      red_flags: toStr(row[resolvedHeaders.red_flags!]),
+      contact_email: toStr(row[resolvedHeaders.contact_email!]),
     });
   }
 
@@ -616,8 +740,6 @@ export async function saveNewConfig(input: z.infer<typeof configSaveSchema>) {
     .eq("is_active", true)
     .single();
 
-  await supabaseAdmin.from("scoring_config").update({ is_active: false }).eq("is_active", true);
-
   const { data, error } = await supabaseAdmin
     .from("scoring_config")
     .insert({
@@ -626,21 +748,60 @@ export async function saveNewConfig(input: z.infer<typeof configSaveSchema>) {
       disqualifiers: current?.disqualifiers ?? { ranking_excluded: ["Poor", "Bad"] },
       overrides: current?.overrides ?? {},
       niche_prompt: parsed.niche_prompt || null,
-      is_active: true,
+      is_active: false,
     })
     .select()
     .single();
   if (error || !data) throw new AppError(error?.message ?? "Config save failed", "CONFIG_SAVE_FAILED", 500);
+
+  const { error: deactivateError } = await supabaseAdmin
+    .from("scoring_config")
+    .update({ is_active: false })
+    .neq("id", data.id)
+    .eq("is_active", true);
+  if (deactivateError) {
+    throw new AppError(deactivateError.message, "CONFIG_SAVE_FAILED", 500);
+  }
+
+  const { error: activateError } = await supabaseAdmin
+    .from("scoring_config")
+    .update({ is_active: true })
+    .eq("id", data.id);
+  if (activateError) {
+    throw new AppError(activateError.message, "CONFIG_SAVE_FAILED", 500);
+  }
+
   return data;
 }
 
 export async function restoreConfig(id: string) {
-  await supabaseAdmin.from("scoring_config").update({ is_active: false }).eq("is_active", true);
-  const { error } = await supabaseAdmin
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("scoring_config")
+    .select("id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new AppError(existingError.message, "CONFIG_RESTORE_FAILED", 500);
+  }
+
+  if (!existing) {
+    throw new AppError("Config not found.", "CONFIG_NOT_FOUND", 404);
+  }
+
+  const { error: activateError } = await supabaseAdmin
     .from("scoring_config")
     .update({ is_active: true })
     .eq("id", id);
-  if (error) throw new AppError(error.message, "CONFIG_RESTORE_FAILED", 500);
+  if (activateError) throw new AppError(activateError.message, "CONFIG_RESTORE_FAILED", 500);
+
+  const { error: deactivateError } = await supabaseAdmin
+    .from("scoring_config")
+    .update({ is_active: false })
+    .neq("id", id)
+    .eq("is_active", true);
+  if (deactivateError) throw new AppError(deactivateError.message, "CONFIG_RESTORE_FAILED", 500);
+
   return { ok: true };
 }
 
@@ -731,7 +892,7 @@ export async function getCampaignStatus(id: string) {
 }
 
 export async function createCampaign(input: CampaignCreateInput) {
-  const parsed = campaignCreateSchema.parse(input);
+  const parsed = coerceCampaign(campaignCreateSchema.parse(input));
 
   const { count: vendorCount } = await supabaseAdmin
     .from("vendors")
@@ -789,7 +950,6 @@ export async function createCampaign(input: CampaignCreateInput) {
     throw new AppError("Could not create campaign.", "CAMPAIGN_CREATE_FAILED", 500);
   }
 
-  startScoringInBackground(campaign.id);
   return { id: campaign.id };
 }
 
@@ -798,11 +958,16 @@ export async function toggleResultIncluded(
   resultId: string,
   included: boolean,
 ) {
-  const { error } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("campaign_results")
     .update({ included })
+    .select("id")
+    .eq("campaign_id", campaignId)
     .eq("id", resultId);
   if (error) throw new AppError(error.message, "RESULT_UPDATE_FAILED", 500);
+  if (!data || data.length === 0) {
+    throw new AppError("Campaign result not found.", "RESULT_NOT_FOUND", 404);
+  }
 
   await supabaseAdmin
     .from("campaigns")
@@ -850,12 +1015,25 @@ export async function deleteCampaign(id: string) {
 }
 
 export async function restartCampaign(id: string) {
+  const { data: existing, error: existingError } = await supabaseAdmin
+    .from("campaigns")
+    .select("id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new AppError(existingError.message, "CAMPAIGN_RESTART_FAILED", 500);
+  }
+
+  if (!existing) {
+    throw new AppError("Campaign not found.", "CAMPAIGN_NOT_FOUND", 404);
+  }
+
   await supabaseAdmin.from("campaign_results").delete().eq("campaign_id", id);
   await supabaseAdmin
     .from("campaigns")
     .update({ status: "scoring", updated_at: new Date().toISOString() })
     .eq("id", id);
-  startScoringInBackground(id);
   return { ok: true };
 }
 
@@ -1070,7 +1248,7 @@ export async function buildCampaignExport(campaignId: string) {
   const fileBuffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
   const { error: exportInsertError } = await supabaseAdmin.from("campaign_exports").insert({
     campaign_id: campaignId,
-    file_data: fileBuffer as unknown as string,
+    file_data: toPostgresBytea(fileBuffer),
   });
   if (exportInsertError) console.error(exportInsertError);
 

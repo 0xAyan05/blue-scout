@@ -6,7 +6,10 @@ import { jsonError } from "@/lib/route-handler";
 export const runtime = "nodejs";
 
 const bodySchema = z.object({
-  included: z.boolean(),
+  included: z.union([z.boolean(), z.literal("true"), z.literal("false")]).transform((value) => {
+    if (typeof value === "boolean") return value;
+    return value === "true";
+  }),
 });
 
 export async function PATCH(

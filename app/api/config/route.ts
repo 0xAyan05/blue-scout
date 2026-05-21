@@ -8,7 +8,14 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const [active, history] = await Promise.all([getActiveConfig(), listConfigs()]);
-    return NextResponse.json({ active, history });
+    return NextResponse.json(
+      { active, history },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        },
+      },
+    );
   } catch (error) {
     return jsonError(error, "Could not load config.", "CONFIG_LOAD_FAILED");
   }
