@@ -98,6 +98,14 @@ export function jsonError(
     {
       error: fallbackMessage,
       code: fallbackCode,
+      ...(error instanceof Error
+        ? {
+            details: {
+              message: error.message,
+              name: error.name,
+            },
+          }
+        : {}),
     },
     { status: 500 },
   );
